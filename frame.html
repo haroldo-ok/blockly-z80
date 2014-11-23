@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="blockly/blockly_compressed.js"></script>
+    <script type="text/javascript" src="blockly/blocks_compressed.js"></script>
+	
+	<script type="text/javascript" src="generators/javascript.js"></script>
+	<script type="text/javascript" src="generators/javascript/colour.js"></script>
+	<script type="text/javascript" src="generators/javascript/lists.js"></script>
+	<script type="text/javascript" src="generators/javascript/logic.js"></script>
+	<script type="text/javascript" src="generators/javascript/loops.js"></script>
+	<script type="text/javascript" src="generators/javascript/math.js"></script>
+	<script type="text/javascript" src="generators/javascript/procedures.js"></script>
+	<script type="text/javascript" src="generators/javascript/text.js"></script>
+	<script type="text/javascript" src="generators/javascript/variables.js"></script>
+	
+    <script type="text/javascript" src="blockly/msg/js/en.js"></script>
+    <style>
+      html, body {
+        background-color: #fff;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+      }
+      .blocklySvg {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <script>
+      function init() {
+        Blockly.inject(document.body,
+            {toolbox: document.getElementById('toolbox')});
+        // Let the top-level application know that Blockly is ready.
+        window.parent.blocklyLoaded(Blockly);
+      }
+    </script>
+  </head>
+  <body onload="init()">
+    <xml id="toolbox" style="display: none">
+      <block type="controls_if"></block>
+      <block type="logic_compare"></block>
+      <block type="controls_repeat_ext"></block>
+      <block type="math_number"></block>
+      <block type="math_arithmetic"></block>
+      <block type="text"></block>
+      <block type="text_print"></block>
+    </xml>
+  </body>
+</html>
