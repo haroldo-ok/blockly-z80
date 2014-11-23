@@ -47,7 +47,7 @@
             window.Blockly = blockly;
 			
 			Blockly.addChangeListener(function(){
-				var code = Blockly.JavaScript.workspaceToCode();
+				var code = Blockly.Z80.workspaceToCode();
 				document.getElementById('blockly-output').value = code;
 			});
 		}

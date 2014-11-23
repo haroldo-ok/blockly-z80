@@ -19,86 +19,86 @@
  */
 
 /**
- * @fileoverview Generating JavaScript for procedure blocks.
- * @author fraser@google.com (Neil Fraser)
+ * @fileoverview Generating Z80 for procedure blocks.
+ * @author haroldoop@gmail.com (Haroldo de Oliveira Pinheiro)
  */
 'use strict';
 
-goog.provide('Blockly.JavaScript.procedures');
+goog.provide('Blockly.Z80.procedures');
 
-goog.require('Blockly.JavaScript');
+goog.require('Blockly.Z80');
 
 
-Blockly.JavaScript['procedures_defreturn'] = function(block) {
+Blockly.Z80['procedures_defreturn'] = function(block) {
   // Define a procedure with a return value.
-  var funcName = Blockly.JavaScript.variableDB_.getName(
+  var funcName = Blockly.Z80.variableDB_.getName(
       block.getFieldValue('NAME'), Blockly.Procedures.NAME_TYPE);
-  var branch = Blockly.JavaScript.statementToCode(block, 'STACK');
-  if (Blockly.JavaScript.STATEMENT_PREFIX) {
-    branch = Blockly.JavaScript.prefixLines(
-        Blockly.JavaScript.STATEMENT_PREFIX.replace(/%1/g,
-        '\'' + block.id + '\''), Blockly.JavaScript.INDENT) + branch;
+  var branch = Blockly.Z80.statementToCode(block, 'STACK');
+  if (Blockly.Z80.STATEMENT_PREFIX) {
+    branch = Blockly.Z80.prefixLines(
+        Blockly.Z80.STATEMENT_PREFIX.replace(/%1/g,
+        '\'' + block.id + '\''), Blockly.Z80.INDENT) + branch;
   }
-  if (Blockly.JavaScript.INFINITE_LOOP_TRAP) {
-    branch = Blockly.JavaScript.INFINITE_LOOP_TRAP.replace(/%1/g,
+  if (Blockly.Z80.INFINITE_LOOP_TRAP) {
+    branch = Blockly.Z80.INFINITE_LOOP_TRAP.replace(/%1/g,
         '\'' + block.id + '\'') + branch;
   }
-  var returnValue = Blockly.JavaScript.valueToCode(block, 'RETURN',
-      Blockly.JavaScript.ORDER_NONE) || '';
+  var returnValue = Blockly.Z80.valueToCode(block, 'RETURN',
+      Blockly.Z80.ORDER_NONE) || '';
   if (returnValue) {
     returnValue = '  return ' + returnValue + ';\n';
   }
   var args = [];
   for (var x = 0; x < block.arguments_.length; x++) {
-    args[x] = Blockly.JavaScript.variableDB_.getName(block.arguments_[x],
+    args[x] = Blockly.Z80.variableDB_.getName(block.arguments_[x],
         Blockly.Variables.NAME_TYPE);
   }
   var code = 'function ' + funcName + '(' + args.join(', ') + ') {\n' +
       branch + returnValue + '}';
-  code = Blockly.JavaScript.scrub_(block, code);
-  Blockly.JavaScript.definitions_[funcName] = code;
+  code = Blockly.Z80.scrub_(block, code);
+  Blockly.Z80.definitions_[funcName] = code;
   return null;
 };
 
 // Defining a procedure without a return value uses the same generator as
 // a procedure with a return value.
-Blockly.JavaScript['procedures_defnoreturn'] =
-    Blockly.JavaScript['procedures_defreturn'];
+Blockly.Z80['procedures_defnoreturn'] =
+    Blockly.Z80['procedures_defreturn'];
 
-Blockly.JavaScript['procedures_callreturn'] = function(block) {
+Blockly.Z80['procedures_callreturn'] = function(block) {
   // Call a procedure with a return value.
-  var funcName = Blockly.JavaScript.variableDB_.getName(
+  var funcName = Blockly.Z80.variableDB_.getName(
       block.getFieldValue('NAME'), Blockly.Procedures.NAME_TYPE);
   var args = [];
   for (var x = 0; x < block.arguments_.length; x++) {
-    args[x] = Blockly.JavaScript.valueToCode(block, 'ARG' + x,
-        Blockly.JavaScript.ORDER_COMMA) || 'null';
+    args[x] = Blockly.Z80.valueToCode(block, 'ARG' + x,
+        Blockly.Z80.ORDER_COMMA) || 'null';
   }
   var code = funcName + '(' + args.join(', ') + ')';
-  return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+  return [code, Blockly.Z80.ORDER_FUNCTION_CALL];
 };
 
-Blockly.JavaScript['procedures_callnoreturn'] = function(block) {
+Blockly.Z80['procedures_callnoreturn'] = function(block) {
   // Call a procedure with no return value.
-  var funcName = Blockly.JavaScript.variableDB_.getName(
+  var funcName = Blockly.Z80.variableDB_.getName(
       block.getFieldValue('NAME'), Blockly.Procedures.NAME_TYPE);
   var args = [];
   for (var x = 0; x < block.arguments_.length; x++) {
-    args[x] = Blockly.JavaScript.valueToCode(block, 'ARG' + x,
-        Blockly.JavaScript.ORDER_COMMA) || 'null';
+    args[x] = Blockly.Z80.valueToCode(block, 'ARG' + x,
+        Blockly.Z80.ORDER_COMMA) || 'null';
   }
   var code = funcName + '(' + args.join(', ') + ');\n';
   return code;
 };
 
-Blockly.JavaScript['procedures_ifreturn'] = function(block) {
+Blockly.Z80['procedures_ifreturn'] = function(block) {
   // Conditionally return value from a procedure.
-  var condition = Blockly.JavaScript.valueToCode(block, 'CONDITION',
-      Blockly.JavaScript.ORDER_NONE) || 'false';
+  var condition = Blockly.Z80.valueToCode(block, 'CONDITION',
+      Blockly.Z80.ORDER_NONE) || 'false';
   var code = 'if (' + condition + ') {\n';
   if (block.hasReturnValue_) {
-    var value = Blockly.JavaScript.valueToCode(block, 'VALUE',
-        Blockly.JavaScript.ORDER_NONE) || 'null';
+    var value = Blockly.Z80.valueToCode(block, 'VALUE',
+        Blockly.Z80.ORDER_NONE) || 'null';
     code += '  return ' + value + ';\n';
   } else {
     code += '  return;\n';

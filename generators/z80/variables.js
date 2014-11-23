@@ -19,28 +19,28 @@
  */
 
 /**
- * @fileoverview Generating JavaScript for variable blocks.
- * @author fraser@google.com (Neil Fraser)
+ * @fileoverview Generating Z80 for variable blocks.
+ * @author haroldoop@gmail.com (Haroldo de Oliveira Pinheiro)
  */
 'use strict';
 
-goog.provide('Blockly.JavaScript.variables');
+goog.provide('Blockly.Z80.variables');
 
-goog.require('Blockly.JavaScript');
+goog.require('Blockly.Z80');
 
 
-Blockly.JavaScript['variables_get'] = function(block) {
+Blockly.Z80['variables_get'] = function(block) {
   // Variable getter.
-  var code = Blockly.JavaScript.variableDB_.getName(block.getFieldValue('VAR'),
+  var code = Blockly.Z80.variableDB_.getName(block.getFieldValue('VAR'),
       Blockly.Variables.NAME_TYPE);
-  return [code, Blockly.JavaScript.ORDER_ATOMIC];
+  return [code, Blockly.Z80.ORDER_ATOMIC];
 };
 
-Blockly.JavaScript['variables_set'] = function(block) {
+Blockly.Z80['variables_set'] = function(block) {
   // Variable setter.
-  var argument0 = Blockly.JavaScript.valueToCode(block, 'VALUE',
-      Blockly.JavaScript.ORDER_ASSIGNMENT) || '0';
-  var varName = Blockly.JavaScript.variableDB_.getName(
+  var argument0 = Blockly.Z80.valueToCode(block, 'VALUE',
+      Blockly.Z80.ORDER_ASSIGNMENT) || '0';
+  var varName = Blockly.Z80.variableDB_.getName(
       block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
   return varName + ' = ' + argument0 + ';\n';
 };
