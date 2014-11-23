@@ -28,10 +28,17 @@ goog.provide('Blockly.Z80.text');
 
 goog.require('Blockly.Z80');
 
+Blockly.Z80.text_ = function(label) {
+	return '\tld hl, ' + label + '\n';
+};
+
+Blockly.Z80.text_registered_ = function(string) {
+	return Blockly.Z80.text_(Blockly.Z80.registerString_(string));
+}
 
 Blockly.Z80['text'] = function(block) {
   // Text value.
-  var code = Blockly.Z80.quote_(block.getFieldValue('TEXT'));
+  var code = Blockly.Z80.text_registered_(block.getFieldValue('TEXT'));
   return [code, Blockly.Z80.ORDER_ATOMIC];
 };
 
@@ -229,8 +236,8 @@ Blockly.Z80['text_trim'] = function(block) {
 Blockly.Z80['text_print'] = function(block) {
   // Print statement.
   var argument0 = Blockly.Z80.valueToCode(block, 'TEXT',
-      Blockly.Z80.ORDER_NONE) || '\'\'';
-  return 'window.alert(' + argument0 + ');\n';
+      Blockly.Z80.ORDER_NONE) || Blockly.Z80.text_registered_('');
+  return argument0 + '\tcall text_print\n';
 };
 
 Blockly.Z80['text_prompt'] = function(block) {

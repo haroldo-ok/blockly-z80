@@ -88,6 +88,11 @@ Blockly.Z80.ORDER_NONE = 99;          // (...)
 Blockly.Z80.init = function() {
   // Create a dictionary of definitions to be printed before the code.
   Blockly.Z80.definitions_ = Object.create(null);
+  // Create a dictionary of definitions to be printed after the code.
+  Blockly.Z80.strings_ = {
+	strings: {},
+	nextNum: 1
+  };
   // Create a dictionary mapping desired function names in definitions_
   // to actual function names (to avoid collisions with user functions).
   Blockly.Z80.functionNames_ = Object.create(null);
@@ -120,7 +125,14 @@ Blockly.Z80.finish = function(code) {
   for (var name in Blockly.Z80.definitions_) {
     definitions.push(Blockly.Z80.definitions_[name]);
   }
-  return definitions.join('\n\n') + '\n\n\n' + code;
+  
+  // Convert the string definitions dictionary
+  var stringDefs = [];
+  for (var string in Blockly.Z80.strings_.strings) {
+	stringDefs.push(Blockly.Z80.strings_.strings[string] + ':\tds ' + Blockly.Z80.quote_(string) + ', 0');
+  }
+  
+  return definitions.join('\n\n') + '\n\n\nMAIN:\n' + code + '\n\n\n' + stringDefs.join('\n');
 };
 
 /**
@@ -144,9 +156,17 @@ Blockly.Z80.quote_ = function(string) {
   // TODO: This is a quick hack.  Replace with goog.string.quote
   string = string.replace(/\\/g, '\\\\')
                  .replace(/\n/g, '\\\n')
-                 .replace(/'/g, '\\\'');
-  return '\'' + string + '\'';
+                 .replace(/'/g, '\\\'')
+                 .replace(/"/g, '\\\"');
+  return '\"' + string + '\"';
 };
+
+Blockly.Z80.registerString_ = function(string) {
+	if (!(string in Blockly.Z80.strings_.strings)) {
+		Blockly.Z80.strings_.strings[string] = 'str_' + Blockly.Z80.strings_.nextNum++;
+	}
+	return Blockly.Z80.strings_.strings[string];
+}
 
 /**
  * Common tasks for generating Z80 from blocks.
