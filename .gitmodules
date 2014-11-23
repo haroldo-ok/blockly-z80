@@ -1,0 +1,6 @@
+[submodule "msx-bitz80"]
+	path = msx-bitz80
+	url = https://github.com/jannone/msx-bitz80
+[submodule "blockly"]
+	path = blockly
+	url = https://github.com/google/blockly
