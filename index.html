@@ -66,6 +66,49 @@
 		function bitz80Loaded(BitZ80) {
 			console.debug('BitZ80 ready');			
 			window.BitZ80 = BitZ80;
+			
+			BitZ80.ASM.fExternalLoader = function(fileName) {
+				return 'nop\n' +
+					'text_print:\tret\n' +
+					'\tdb 255\n';
+			}
+			
+			// Patches the include directive to actually add the included things
+			BitZ80.ASM.prototype.originalMatchDirective = BitZ80.ASM.prototype.matchDirective;
+			BitZ80.ASM.prototype.matchDirective = function(sOp, sParams) {
+				if (!this.sStruct && sOp == 'INCLUDE') {
+					var sFile = eval(this.prepareParam(sParams));
+					var sCode = BitZ80.ASM.fExternalLoader(sFile);
+					var oASM = new BitZ80.ASM();
+					oASM.aMem = this.aMem;
+					oASM.aData = this.aData;
+					oASM.aLabels = this.aLabels;
+					oASM.iPointer = this.iPointer;
+					oASM.iBegin = this.iBegin;
+					oASM.iExec = this.iExec;
+					oASM.aTime = this.aTime;
+					oASM.iM1 = this.iM1;
+					oASM.sLastLabel = this.sLastLabel;
+					oASM.sGenType = this.sGenType;
+					
+					//this.fBreakpoint = null;
+					//this.aBreakpoints = null;
+					//this.sGenType = 'bin';
+					oASM.oParentASM = this;
+					oASM.start(sCode);
+					
+					this.iPointer = oASM.iPointer;
+					this.iBegin = oASM.iBegin;
+					this.iM1 = oASM.iM1;
+					this.sLastLabel = oASM.sLastLabel;
+					this.aMem = this.aMem.concat(oASM.aMem);
+					
+					return true;
+				} else {
+					return this.originalMatchDirective(sOp, sParams);
+				}
+			}
+			
 			checkLoaded();
 		}
 		
@@ -83,6 +126,9 @@
 					try {
 						asm.start(code);
 						asm.evaluateData();
+						asm.patch();
+						
+						console.log(asm.aMem);
 						
 						bzOut.value = 'OK';
 					} catch (e) {

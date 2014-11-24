@@ -132,7 +132,10 @@ Blockly.Z80.finish = function(code) {
 	stringDefs.push(Blockly.Z80.strings_.strings[string] + ':\tdb ' + Blockly.Z80.quote_(string) + ', 0');
   }
   
-  return definitions.join('\n\n') + '\n\n\nMAIN:\n' + code + '\n\n\n' + stringDefs.join('\n');
+  return '\torg 0000h\n' +
+		'\tinclude "sms.asm"\n' +
+		definitions.join('\n\n') + 
+		'\n\nMAIN:\n' + code + '\n\n\n' + stringDefs.join('\n');
 };
 
 /**
