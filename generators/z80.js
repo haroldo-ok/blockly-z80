@@ -129,7 +129,7 @@ Blockly.Z80.finish = function(code) {
   // Convert the string definitions dictionary
   var stringDefs = [];
   for (var string in Blockly.Z80.strings_.strings) {
-	stringDefs.push(Blockly.Z80.strings_.strings[string] + ':\tds ' + Blockly.Z80.quote_(string) + ', 0');
+	stringDefs.push(Blockly.Z80.strings_.strings[string] + ':\tdb ' + Blockly.Z80.quote_(string) + ', 0');
   }
   
   return definitions.join('\n\n') + '\n\n\nMAIN:\n' + code + '\n\n\n' + stringDefs.join('\n');
