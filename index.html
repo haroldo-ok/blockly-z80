@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Blockly-Z80 demo</title>
 
+<script type="text/javascript" src="FileSaver.js/FileSaver.js"></script>
+
 <style>
 	html, body {
 		background-color: #fff;
@@ -115,6 +117,8 @@
 		function checkLoaded() {
 			if (window['Blockly'] && window['BitZ80']) {
 				console.debug('Everything is ready');
+				
+				// Capture Blockly's change event.
 				Blockly.addChangeListener(function(){
 					var code = Blockly.Z80.workspaceToCode();
 					document.getElementById('blockly-output').value = code;
@@ -123,17 +127,26 @@
 					bzOut.value = '';
 					
 					var asm = new BitZ80.ASM();
+					BitZ80.code = null;
+					
 					try {
 						asm.start(code);
 						asm.evaluateData();
 						asm.patch();
-						
-						console.log(asm.aMem);
+					
+						BitZ80.code = asm.aMem;
 						
 						bzOut.value = 'OK';
 					} catch (e) {
 						bzOut.value = e;
 					}
+				});
+				
+				// Capture 'Save ROM' button click
+				document.getElementById('save-rom').addEventListener('click', function(){
+					var bytes = new Uint8Array(BitZ80.code)
+					var blob = new Blob([bytes], {type: "application/octet-stream"});
+					saveAs(blob, 'bitz80.sms');
 				});
 			} else {
 				// Still waiting for dependencies to load
@@ -145,6 +158,9 @@
 		<iframe id="blockly-editor" src="frame.html"></iframe>
 	</div>
 	<div id="output-container">
+		<div id="button-container">
+			<button id="save-rom">Save ROM</button>
+		</div>
 		<textarea id="blockly-output"></textarea>
 		<textarea id="bitz80-output"></textarea>
 	</div>
