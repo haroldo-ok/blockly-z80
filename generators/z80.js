@@ -132,8 +132,8 @@ Blockly.Z80.finish = function(code) {
 	stringDefs.push(Blockly.Z80.strings_.strings[string] + ':\tdb ' + Blockly.Z80.quote_(string) + ', 0');
   }
   
-  return '\torg 0000h\n' +
-		'\tinclude "sms.asm"\n' +
+  return '\tinclude "sms.asm"\n' +
+		'\tinclude "font.asm"\n' +
 		definitions.join('\n\n') + 
 		'\n\nMAIN:\n' + code + '\n\n\n' + stringDefs.join('\n');
 };

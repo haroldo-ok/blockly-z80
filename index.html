@@ -70,9 +70,8 @@
 			window.BitZ80 = BitZ80;
 			
 			BitZ80.ASM.fExternalLoader = function(fileName) {
-				return 'nop\n' +
-					'text_print:\tret\n' +
-					'\tdb 255\n';
+				var el = document.getElementById('include-' + fileName);
+				return el && el.value;
 			}
 			
 			// Patches the include directive to actually add the included things
@@ -166,6 +165,339 @@
 	</div>
 	
 	<iframe id="bitz80-container" src="bitz80-frame.html"></iframe>
+	
+	<textarea id="include-sms.asm" style="display: hidden">
+	;==============================================================
+	; SMS defines
+	;==============================================================
+	VDPControl:	equ $bf
+	VDPData: 	equ $be
+	VRAMWrite:	equ $4000
+	CRAMWrite:	equ $c000
+	
+		org 0000h
+		
+	;==============================================================
+	; Boot section
+	;==============================================================
+		di              ; disable interrupts
+		im 1            ; Interrupt mode 1
+		jp setup         ; jump to setup routine
+
+		; org $0066 ; multiple orgs not supported by bitz80... please, don't press pause... ^_^
+
+	;==============================================================
+	; Setup
+	;==============================================================
+	setup:
+		ld sp, $dff0
+
+		;==============================================================
+		; Set up VDP registers
+		;==============================================================
+		ld hl,VDPInitData
+		ld b,VDPInitDataEnd-VDPInitData
+		ld c,VDPControl
+		otir
+	
+		;==============================================================
+		; Clear VRAM
+		;==============================================================
+		; 1. Set VRAM write address to $0000
+		ld hl,$0000 | VRAMWrite
+		call SetVDPAddress
+		; 2. Output 16KB of zeroes
+		ld bc,$4000     ; Counter for 16KB of VRAM
+	ClearVRAM_Loop:  
+		xor a
+		out (VDPData),a ; Output to VRAM address, which is auto-incremented after each write
+		dec bc
+		ld a,b
+		or c
+		jr nz, ClearVRAM_Loop
+
+		;==============================================================
+		; Load palette
+		;==============================================================
+		; 1. Set VRAM write address to CRAM (palette) address 0
+		ld hl,$0000 | CRAMWrite
+		call SetVDPAddress
+		; 2. Output colour data
+		ld hl,PaletteData
+		ld bc,PaletteDataEnd-PaletteData
+		call CopyToVDP
+		
+		;==============================================================
+		; Load tiles (font)
+		;==============================================================
+		; 1. Set VRAM write address to tile index 0
+		ld hl,$0000 | VRAMWrite
+		call SetVDPAddress
+		; 2. Output tile data
+		ld hl,FontData              ; Location of tile data
+		ld bc,FontDataEnd-FontData  ; Counter for number of bytes to write
+		call CopyToVDP
+
+		;==============================================================
+		; Turn screen on
+		;==============================================================
+		ld a,01000000b
+	;          ||||||`- Zoomed sprites -> 16x16 pixels
+	;          |||||`-- Doubled sprites -> 2 tiles per sprite, 8x16
+	;          ||||`--- Mega Drive mode 5 enable
+	;          |||`---- 30 row/240 line mode
+	;          ||`----- 28 row/224 line mode
+	;          |`------ VBlank interrupts
+	;          `------- Enable display
+		out (VDPControl),a
+		ld a,$81
+		out (VDPControl),a
+
+    ; Infinite loop to stop program
+	Infinite_Loop :  jr Infinite_Loop
+		
+	;==============================================================
+	; Helper functions
+	;==============================================================
+
+	SetVDPAddress:
+	; Sets the VDP address
+	; Parameters: hl = address
+		push af
+			ld a,l
+			out (VDPControl),a
+			ld a,h
+			out (VDPControl),a
+		pop af
+		ret
+
+	CopyToVDP:
+	; Copies data to the VDP
+	; Parameters: hl = data address, bc = data length
+	; Affects: a, hl, bc
+	CopyToVDP_Loop:  
+		ld a,(hl)    ; Get data byte
+		out (VDPData),a
+		inc hl       ; Point to next letter
+		dec bc
+		ld a,b
+		or c
+		jr nz, CopyToVDP_Loop
+		ret
+
+	;==============================================================
+	; Data
+	;==============================================================
+
+	PaletteData:
+		db $00,$3f ; Black, white
+	PaletteDataEnd:
+
+	; VDP initialisation data
+	VDPInitData:
+		db $04,$80,$00,$81,$ff,$82,$ff,$85,$ff,$86,$ff,$87,$00,$88,$00,$89,$ff,$8a
+	VDPInitDataEnd:
+
+	text_print:
+		ret
+		ld a, VDPControl
+
+	</textarea>
+	
+	<textarea id="include-font.asm">
+	FontData:
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,00h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	6ch,00h,00h,00h,6ch,00h,00h,00h,	6ch,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	36h,00h,00h,00h,36h,00h,00h,00h,	7fh,00h,00h,00h,36h,00h,00h,00h
+		db	7fh,00h,00h,00h,36h,00h,00h,00h,	36h,00h,00h,00h,00h,00h,00h,00h
+		db	0ch,00h,00h,00h,3fh,00h,00h,00h,	68h,00h,00h,00h,3eh,00h,00h,00h
+		db	0bh,00h,00h,00h,7eh,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	60h,00h,00h,00h,66h,00h,00h,00h,	0ch,00h,00h,00h,18h,00h,00h,00h
+		db	30h,00h,00h,00h,66h,00h,00h,00h,	06h,00h,00h,00h,00h,00h,00h,00h
+		db	38h,00h,00h,00h,6ch,00h,00h,00h,	6ch,00h,00h,00h,38h,00h,00h,00h
+		db	6dh,00h,00h,00h,66h,00h,00h,00h,	3bh,00h,00h,00h,00h,00h,00h,00h
+		db	0ch,00h,00h,00h,18h,00h,00h,00h,	30h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	0ch,00h,00h,00h,18h,00h,00h,00h,	30h,00h,00h,00h,30h,00h,00h,00h
+		db	30h,00h,00h,00h,18h,00h,00h,00h,	0ch,00h,00h,00h,00h,00h,00h,00h
+		db	30h,00h,00h,00h,18h,00h,00h,00h,	0ch,00h,00h,00h,0ch,00h,00h,00h
+		db	0ch,00h,00h,00h,18h,00h,00h,00h,	30h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,18h,00h,00h,00h,	7eh,00h,00h,00h,3ch,00h,00h,00h
+		db	7eh,00h,00h,00h,18h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,7eh,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,30h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,7eh,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,06h,00h,00h,00h,	0ch,00h,00h,00h,18h,00h,00h,00h
+		db	30h,00h,00h,00h,60h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	6eh,00h,00h,00h,7eh,00h,00h,00h
+		db	76h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	18h,00h,00h,00h,38h,00h,00h,00h,	18h,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	06h,00h,00h,00h,0ch,00h,00h,00h
+		db	18h,00h,00h,00h,30h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	06h,00h,00h,00h,1ch,00h,00h,00h
+		db	06h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	0ch,00h,00h,00h,1ch,00h,00h,00h,	3ch,00h,00h,00h,6ch,00h,00h,00h
+		db	7eh,00h,00h,00h,0ch,00h,00h,00h,	0ch,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,60h,00h,00h,00h,	7ch,00h,00h,00h,06h,00h,00h,00h
+		db	06h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	1ch,00h,00h,00h,30h,00h,00h,00h,	60h,00h,00h,00h,7ch,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,06h,00h,00h,00h,	0ch,00h,00h,00h,18h,00h,00h,00h
+		db	30h,00h,00h,00h,30h,00h,00h,00h,	30h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,3ch,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,3eh,00h,00h,00h
+		db	06h,00h,00h,00h,0ch,00h,00h,00h,	38h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	18h,00h,00h,00h,18h,00h,00h,00h
+		db	00h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	18h,00h,00h,00h,18h,00h,00h,00h
+		db	00h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,30h,00h,00h,00h
+		db	0ch,00h,00h,00h,18h,00h,00h,00h,	30h,00h,00h,00h,60h,00h,00h,00h
+		db	30h,00h,00h,00h,18h,00h,00h,00h,	0ch,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	30h,00h,00h,00h,18h,00h,00h,00h,	0ch,00h,00h,00h,06h,00h,00h,00h
+		db	0ch,00h,00h,00h,18h,00h,00h,00h,	30h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	0ch,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,00h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	6eh,00h,00h,00h,6ah,00h,00h,00h
+		db	6eh,00h,00h,00h,60h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,7eh,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	7ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,7ch,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	7ch,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	60h,00h,00h,00h,60h,00h,00h,00h
+		db	60h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	78h,00h,00h,00h,6ch,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,6ch,00h,00h,00h,	78h,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,60h,00h,00h,00h,	60h,00h,00h,00h,7ch,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,60h,00h,00h,00h,	60h,00h,00h,00h,7ch,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	60h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	60h,00h,00h,00h,6eh,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,7eh,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	3eh,00h,00h,00h,0ch,00h,00h,00h,	0ch,00h,00h,00h,0ch,00h,00h,00h
+		db	0ch,00h,00h,00h,6ch,00h,00h,00h,	38h,00h,00h,00h,00h,00h,00h,00h
+		db	66h,00h,00h,00h,6ch,00h,00h,00h,	78h,00h,00h,00h,70h,00h,00h,00h
+		db	78h,00h,00h,00h,6ch,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	60h,00h,00h,00h,60h,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	63h,00h,00h,00h,77h,00h,00h,00h,	7fh,00h,00h,00h,6bh,00h,00h,00h
+		db	6bh,00h,00h,00h,63h,00h,00h,00h,	63h,00h,00h,00h,00h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	76h,00h,00h,00h,7eh,00h,00h,00h
+		db	6eh,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	7ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,7ch,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	60h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	6ah,00h,00h,00h,6ch,00h,00h,00h,	36h,00h,00h,00h,00h,00h,00h,00h
+		db	7ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,7ch,00h,00h,00h
+		db	6ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	60h,00h,00h,00h,3ch,00h,00h,00h
+		db	06h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,3ch,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	63h,00h,00h,00h,63h,00h,00h,00h,	6bh,00h,00h,00h,6bh,00h,00h,00h
+		db	7fh,00h,00h,00h,77h,00h,00h,00h,	63h,00h,00h,00h,00h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,18h,00h,00h,00h
+		db	3ch,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,3ch,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	7eh,00h,00h,00h,06h,00h,00h,00h,	0ch,00h,00h,00h,18h,00h,00h,00h
+		db	30h,00h,00h,00h,60h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	7ch,00h,00h,00h,60h,00h,00h,00h,	60h,00h,00h,00h,60h,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	7ch,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,60h,00h,00h,00h,	30h,00h,00h,00h,18h,00h,00h,00h
+		db	0ch,00h,00h,00h,06h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	3eh,00h,00h,00h,06h,00h,00h,00h,	06h,00h,00h,00h,06h,00h,00h,00h
+		db	06h,00h,00h,00h,06h,00h,00h,00h,	3eh,00h,00h,00h,00h,00h,00h,00h
+		db	18h,00h,00h,00h,3ch,00h,00h,00h,	66h,00h,00h,00h,42h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,ffh,00h,00h,00h
+		db	1ch,00h,00h,00h,36h,00h,00h,00h,	30h,00h,00h,00h,7ch,00h,00h,00h
+		db	30h,00h,00h,00h,30h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	3ch,00h,00h,00h,06h,00h,00h,00h
+		db	3eh,00h,00h,00h,66h,00h,00h,00h,	3eh,00h,00h,00h,00h,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	7ch,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	7ch,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	3ch,00h,00h,00h,66h,00h,00h,00h
+		db	60h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	06h,00h,00h,00h,06h,00h,00h,00h,	3eh,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3eh,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	3ch,00h,00h,00h,66h,00h,00h,00h
+		db	7eh,00h,00h,00h,60h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	1ch,00h,00h,00h,30h,00h,00h,00h,	30h,00h,00h,00h,7ch,00h,00h,00h
+		db	30h,00h,00h,00h,30h,00h,00h,00h,	30h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	3eh,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,3eh,00h,00h,00h,	06h,00h,00h,00h,3ch,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	7ch,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	18h,00h,00h,00h,00h,00h,00h,00h,	38h,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	18h,00h,00h,00h,00h,00h,00h,00h,	38h,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,70h,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	66h,00h,00h,00h,6ch,00h,00h,00h
+		db	78h,00h,00h,00h,6ch,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	38h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,18h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	36h,00h,00h,00h,7fh,00h,00h,00h
+		db	6bh,00h,00h,00h,6bh,00h,00h,00h,	63h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	7ch,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	3ch,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3ch,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	7ch,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,7ch,00h,00h,00h,	60h,00h,00h,00h,60h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	3eh,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,3eh,00h,00h,00h,	06h,00h,00h,00h,07h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	6ch,00h,00h,00h,76h,00h,00h,00h
+		db	60h,00h,00h,00h,60h,00h,00h,00h,	60h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	3eh,00h,00h,00h,60h,00h,00h,00h
+		db	3ch,00h,00h,00h,06h,00h,00h,00h,	7ch,00h,00h,00h,00h,00h,00h,00h
+		db	30h,00h,00h,00h,30h,00h,00h,00h,	7ch,00h,00h,00h,30h,00h,00h,00h
+		db	30h,00h,00h,00h,30h,00h,00h,00h,	1ch,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,66h,00h,00h,00h,	3eh,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,3ch,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	63h,00h,00h,00h,6bh,00h,00h,00h
+		db	6bh,00h,00h,00h,7fh,00h,00h,00h,	36h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	66h,00h,00h,00h,3ch,00h,00h,00h
+		db	18h,00h,00h,00h,3ch,00h,00h,00h,	66h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	66h,00h,00h,00h,66h,00h,00h,00h
+		db	66h,00h,00h,00h,3eh,00h,00h,00h,	06h,00h,00h,00h,3ch,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	7eh,00h,00h,00h,0ch,00h,00h,00h
+		db	18h,00h,00h,00h,30h,00h,00h,00h,	7eh,00h,00h,00h,00h,00h,00h,00h
+		db	0ch,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,70h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	0ch,00h,00h,00h,00h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,00h,00h,00h,00h
+		db	30h,00h,00h,00h,18h,00h,00h,00h,	18h,00h,00h,00h,0eh,00h,00h,00h
+		db	18h,00h,00h,00h,18h,00h,00h,00h,	30h,00h,00h,00h,00h,00h,00h,00h
+		db	31h,00h,00h,00h,6bh,00h,00h,00h,	46h,00h,00h,00h,00h,00h,00h,00h
+		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h 
+	FontDataEnd:
+	</textarea>
 </body>
 
 </html> 
