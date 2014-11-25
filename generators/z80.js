@@ -133,9 +133,11 @@ Blockly.Z80.finish = function(code) {
   }
   
   return '\tinclude "sms.asm"\n' +
-		'\tinclude "font.asm"\n' +
 		definitions.join('\n\n') + 
-		'\n\nMAIN:\n' + code + '\n\n\n' + stringDefs.join('\n');
+		'\n\nMAIN:\n' + code + 
+		'\n\nprogram_done:\tjr program_done' +
+		'\n\n\n' + stringDefs.join('\n') +
+		'\n\n\tinclude "data.asm"\n';
 };
 
 /**

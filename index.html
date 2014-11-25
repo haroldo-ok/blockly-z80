@@ -254,7 +254,14 @@
 		out (VDPControl),a
 
     ; Infinite loop to stop program
-	Infinite_Loop :  jr Infinite_Loop
+	; Infinite_Loop :  jr Infinite_Loop
+	
+	; call main program
+		; Set VRAM write address to tilemap index 0
+		ld hl,$3800 | VRAMWrite
+		call SetVDPAddress
+
+		jp MAIN
 		
 	;==============================================================
 	; Helper functions
@@ -285,6 +292,22 @@
 		jr nz, CopyToVDP_Loop
 		ret
 
+	text_print:
+		ld a,(hl)
+		or a
+		jr z, text_print_end
+		sub 32
+		out (VDPData),a
+		xor a
+		out (VDPData),a
+		inc hl
+		jr text_print
+	text_print_end:
+		ret
+
+	</textarea>
+	
+	<textarea id="include-data.asm">
 	;==============================================================
 	; Data
 	;==============================================================
@@ -298,13 +321,6 @@
 		db $04,$80,$00,$81,$ff,$82,$ff,$85,$ff,$86,$ff,$87,$00,$88,$00,$89,$ff,$8a
 	VDPInitDataEnd:
 
-	text_print:
-		ret
-		ld a, VDPControl
-
-	</textarea>
-	
-	<textarea id="include-font.asm">
 	FontData:
 		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
 		db	00h,00h,00h,00h,00h,00h,00h,00h,	00h,00h,00h,00h,00h,00h,00h,00h
