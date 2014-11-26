@@ -31,8 +31,12 @@ goog.require('Blockly.Z80');
 
 Blockly.Z80['math_number'] = function(block) {
   // Numeric value.
-  var code = parseFloat(block.getFieldValue('NUM'));
-  return [code, Blockly.Z80.ORDER_ATOMIC];
+  var code = parseInt(block.getFieldValue('NUM'));
+  return [
+		'\tld hl, ' + code + '\n' /*+ 
+		'\tld de, 3\n\tcall Multiply\n'*/, 
+		Blockly.Z80.ORDER_ATOMIC
+  ];
 };
 
 Blockly.Z80['math_arithmetic'] = function(block) {

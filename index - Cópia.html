@@ -1,0 +1,656 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Blockly-Z80 demo</title>
+
+<script type="text/javascript" src="FileSaver.js/FileSaver.js"></script>
+
+<style>
+	html, body {
+		background-color: #fff;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		height: 100%;
+	}
+	
+	#blockly-editor {
+		width: 100%;
+		height: 100%;
+	}
+
+	#blockly-output {
+		width: 100%;
+		height: 70%;
+	}
+	
+	#bitz80-output {
+		width: 100%;
+		height: 30%;
+	}
+	
+	#blockly-editor {
+		border: 1px solid #ddd;
+	}
+	
+	#frame-container, #output-container {
+		height: 100%;
+	}
+	
+	#frame-container {
+		width: 70%;
+	}
+	
+	#output-container {
+		position: absolute;
+		top: 0;
+		left: 70%;
+		right: 0;
+	}
+	
+	#bitz80-container {
+		display: none;
+	}
+</style>
+
+</head>
+
+<body>
+	<script>
+		function blocklyLoaded(blockly) {		
+			// Called once Blockly is fully loaded.
+			console.debug('Blockly ready');			
+            window.Blockly = blockly;
+			checkLoaded();
+		}
+		
+		function bitz80Loaded(BitZ80) {
+			console.debug('BitZ80 ready');			
+			window.BitZ80 = BitZ80;
+			
+			BitZ80.ASM.fExternalLoader = function(fileName) {
+				var el = document.getElementById('include-' + fileName);
+				return el && el.value;
+			}
+			
+			// Patches the include directive to actually add the included things
+			BitZ80.ASM.prototype.originalMatchDirective = BitZ80.ASM.prototype.matchDirective;
+			BitZ80.ASM.prototype.matchDirective = function(sOp, sParams) {
+				if (!this.sStruct && sOp == 'INCLUDE') {
+					var sFile = eval(this.prepareParam(sParams));
+					var sCode = BitZ80.ASM.fExternalLoader(sFile);
+					var oASM = new BitZ80.ASM();
+					oASM.aMem = this.aMem;
+					oASM.aData = this.aData;
+					oASM.aLabels = this.aLabels;
+					oASM.iPointer = this.iPointer;
+					oASM.iBegin = this.iBegin;
+					oASM.iExec = this.iExec;
+					oASM.aTime = this.aTime;
+					oASM.iM1 = this.iM1;
+					oASM.sLastLabel = this.sLastLabel;
+					oASM.sGenType = this.sGenType;
+					
+					//this.fBreakpoint = null;
+					//this.aBreakpoints = null;
+					//this.sGenType = 'bin';
+					oASM.oParentASM = this;
+					oASM.start(sCode);
+					
+					this.iPointer = oASM.iPointer;
+					this.iBegin = oASM.iBegin;
+					this.iM1 = oASM.iM1;
+					this.sLastLabel = oASM.sLastLabel;
+					this.aMem = this.aMem.concat(oASM.aMem);
+					
+					return true;
+				} else {
+					return this.originalMatchDirective(sOp, sParams);
+				}
+			}
+			
+			checkLoaded();
+		}
+		
+		function checkLoaded() {
+			if (window['Blockly'] && window['BitZ80']) {
+				console.debug('Everything is ready');
+				
+				// Capture Blockly's change event.
+				Blockly.addChangeListener(function(){
+					var code = Blockly.Z80.workspaceToCode();
+					document.getElementById('blockly-output').value = code;
+					
+					var bzOut = document.getElementById('bitz80-output');
+					bzOut.value = '';
+					
+					var asm = new BitZ80.ASM();
+					BitZ80.code = null;
+					
+					try {
+						asm.start(code);
+						asm.evaluateData();
+						asm.patch();
+					
+						BitZ80.code = asm.aMem;
+						
+						bzOut.value = 'OK';
+					} catch (e) {
+						bzOut.value = e;
+					}
+				});
+				
+				// Capture 'Save ROM' button click
+				document.getElementById('save-rom').addEventListener('click', function(){
+					var bytes = new Uint8Array(BitZ80.code)
+					var blob = new Blob([bytes], {type: "application/octet-stream"});
+					saveAs(blob, 'bitz80.sms');
+				});
+			} else {
+				// Still waiting for dependencies to load
+			}			
+		}
+	</script>
+	
+	<div id="frame-container">
+		<iframe id="blockly-editor" src="frame.html"></iframe>
+	</div>
+	<div id="output-container">
+		<div id="button-container">
+			<button id="save-rom">Save ROM</button>
+		</div>
+		<textarea id="blockly-output"></textarea>
+		<textarea id="bitz80-output"></textarea>
+	</div>
+	
+	<iframe id="bitz80-container" src="bitz80-frame.html"></iframe>
+	
+	<textarea id="include-sms.asm" style="display: hidden">
+	;==============================================================
+	; SMS defines
+	;==============================================================
+	VDPControl:	equ $bf
+	VDPData: 	equ $be
+	VRAMWrite:	equ $4000
+	CRAMWrite:	equ $c000
+	
+		org 0000h
+		
+	;==============================================================
+	; Boot section
+	;==============================================================
+		di              ; disable interrupts
+		im 1            ; Interrupt mode 1
+		jp setup         ; jump to setup routine
+
+		; org $0066 ; multiple orgs not supported by bitz80... please, don't press pause... ^_^
+
+	;==============================================================
+	; Setup
+	;==============================================================
+	setup:
+		ld sp, $dff0
+
+		;==============================================================
+		; Set up VDP registers
+		;==============================================================
+		ld hl,VDPInitData
+		ld b,VDPInitDataEnd-VDPInitData
+		ld c,VDPControl
+		otir
+	
+		;==============================================================
+		; Clear VRAM
+		;==============================================================
+		; 1. Set VRAM write address to $0000
+		ld hl,$0000 | VRAMWrite
+		call SetVDPAddress
+		; 2. Output 16KB of zeroes
+		ld bc,$4000     ; Counter for 16KB of VRAM
+	ClearVRAM_Loop:  
+		xor a
+		out (VDPData),a ; Output to VRAM address, which is auto-incremented after each write
+		dec bc
+		ld a,b
+		or c
+		jr nz, ClearVRAM_Loop
+
+		;==============================================================
+		; Load palette
+		;==============================================================
+		; 1. Set VRAM write address to CRAM (palette) address 0
+		ld hl,$0000 | CRAMWrite
+		call SetVDPAddress
+		; 2. Output colour data
+		ld hl,PaletteData
+		ld bc,PaletteDataEnd-PaletteData
+		call CopyToVDP
+		
+		;==============================================================
+		; Load tiles (font)
+		;==============================================================
+		; 1. Set VRAM write address to tile index 0
+		;ld hl,$0000 | VRAMWrite
+		;call SetVDPAddress
+		; 2. Output tile data
+		;ld hl,FontData              ; Location of tile data
+		;ld bc,FontDataEnd-FontData  ; Counter for number of bytes to write
+		;call Copy1bppToVDP
+
+		;==============================================================
+		; Turn screen on
+		;==============================================================
+		ld a,01000000b
+	;          ||||||`- Zoomed sprites -> 16x16 pixels
+	;          |||||`-- Doubled sprites -> 2 tiles per sprite, 8x16
+	;          ||||`--- Mega Drive mode 5 enable
+	;          |||`---- 30 row/240 line mode
+	;          ||`----- 28 row/224 line mode
+	;          |`------ VBlank interrupts
+	;          `------- Enable display
+		out (VDPControl),a
+		ld a,$81
+		out (VDPControl),a
+
+    ; Infinite loop to stop program
+	; Infinite_Loop :  jr Infinite_Loop
+	
+	; call main program
+		; Set VRAM write address to tilemap index 0
+		ld hl,$3800 | VRAMWrite
+		call SetVDPAddress
+
+		jp MAIN
+		
+	;==============================================================
+	; Helper functions
+	;==============================================================
+
+	SetVDPAddress:
+	; Sets the VDP address
+	; Parameters: hl = address
+		push af
+			ld a,l
+			out (VDPControl),a
+			ld a,h
+			out (VDPControl),a
+		pop af
+		ret
+
+	CopyToVDP:
+	; Copies data to the VDP
+	; Parameters: hl = data address, bc = data length
+	; Affects: a, hl, bc
+	CopyToVDP_Loop:  
+		ld a,(hl)    ; Get data byte
+		out (VDPData),a
+		inc hl       ; Point to next byte
+		dec bc
+		ld a,b
+		or c
+		jr nz, CopyToVDP_Loop
+		ret
+
+;	Copy1bppToVDP:
+	; Copies 1bpp char data to the VDP
+	; Parameters: hl = data address, bc = data length
+	; Affects: a, hl, bc
+;	Copy1bppToVDP_Loop:  
+;		ld a,(hl)    ; Get data byte
+;		out (VDPData),a
+;		xor a		; pad the next 3 bytes
+;		out (VDPData),a
+;		out (VDPData),a
+;		out (VDPData),a
+;		inc hl       ; Point to next byte
+;		dec bc
+;		ld a,b
+;		or c
+;		jr nz, Copy1bppToVDP_Loop
+;		ret
+
+	text_print:
+		ld a,(hl)
+		or a
+		jr z, text_print_end
+		sub 32
+		out (VDPData),a
+		xor a
+		out (VDPData),a
+		inc hl
+		jr text_print
+	text_print_end:
+		ret
+
+	number_print:
+		ld a, l
+		add a, 48-32
+		out (VDPData),a
+		xor a
+		out (VDPData),a
+		ret
+
+	</textarea>
+	
+	<textarea id="include-data.asm">
+	;==============================================================
+	; Data
+	;==============================================================
+
+	PaletteData:
+		db $00,$3f ; Black, white
+	PaletteDataEnd:
+
+	; VDP initialisation data
+	VDPInitData:
+		db $04,$80,$00,$81,$ff,$82,$ff,$85,$ff,$86,$ff,$87,$00,$88,$00,$89,$ff,$8a
+	VDPInitDataEnd:
+
+	</textarea>
+	
+	<!--
+	FontData:
+		db	00h,00h,	00h,00h
+		db	00h,00h,	00h,00h
+		db	18h,18h,	18h,18h
+		db	18h,00h,	18h,00h
+		db	6ch,6ch,	6ch,00h
+		db	00h,00h,	00h,00h
+		db	36h,36h,	7fh,36h
+		db	7fh,36h,	36h,00h
+		db	0ch,3fh,	68h,3eh
+		db	0bh,7eh,	18h,00h
+		db	60h,66h,	0ch,18h
+		db	30h,66h,	06h,00h
+		db	38h,6ch,	6ch,38h
+		db	6dh,66h,	3bh,00h
+		db	0ch,18h,	30h,00h
+		db	00h,00h,	00h,00h
+		db	0ch,18h,	30h,30h
+		db	30h,18h,	0ch,00h
+		db	30h,18h,	0ch,0ch
+		db	0ch,18h,	30h,00h
+		db	00h,18h,	7eh,3ch
+		db	7eh,18h,	00h,00h
+		db	00h,18h,	18h,7eh
+		db	18h,18h,	00h,00h
+		db	00h,00h,	00h,00h
+		db	00h,18h,	18h,30h
+		db	00h,00h,	00h,7eh
+		db	00h,00h,	00h,00h
+		db	00h,00h,	00h,00h
+		db	00h,18h,	18h,00h
+		db	00h,06h,	0ch,18h
+		db	30h,60h,	00h,00h
+		db	3ch,66h,	6eh,7eh
+		db	76h,66h,	3ch,00h
+		db	18h,38h,	18h,18h
+		db	18h,18h,	7eh,00h
+		db	3ch,66h,	06h,0ch
+		db	18h,30h,	7eh,00h
+		db	3ch,66h,	06h,1ch
+		db	06h,66h,	3ch,00h
+		db	0ch,1ch,	3ch,6ch
+		db	7eh,0ch,	0ch,00h
+		db	7eh,60h,	7ch,06h
+		db	06h,66h,	3ch,00h
+		db	1ch,30h,	60h,7ch
+		db	66h,66h,	3ch,00h
+		db	7eh,06h,	0ch,18h
+		db	30h,30h,	30h,00h
+		db	3ch,66h,	66h,3ch
+		db	66h,66h,	3ch,00h
+		db	3ch,66h,	66h,3eh
+		db	06h,0ch,	38h,00h
+		db	00h,00h,	18h,18h
+		db	00h,18h,	18h,00h
+		db	00h,00h,	18h,18h
+		db	00h,18h,	18h,30h
+		db	0ch,18h,	30h,60h
+		db	30h,18h,	0ch,00h
+		db	00h,00h,	7eh,00h
+		db	7eh,00h,	00h,00h
+		db	30h,18h,	0ch,06h
+		db	0ch,18h,	30h,00h
+		db	3ch,66h,	0ch,18h
+		db	18h,00h,	18h,00h
+		db	3ch,66h,	6eh,6ah
+		db	6eh,60h,	3ch,00h
+		db	3ch,66h,	66h,7eh
+		db	66h,66h,	66h,00h
+		db	7ch,66h,	66h,7ch
+		db	66h,66h,	7ch,00h
+		db	3ch,66h,	60h,60h
+		db	60h,66h,	3ch,00h
+		db	78h,6ch,	66h,66h
+		db	66h,6ch,	78h,00h
+		db	7eh,60h,	60h,7ch
+		db	60h,60h,	7eh,00h
+		db	7eh,60h,	60h,7ch
+		db	60h,60h,	60h,00h
+		db	3ch,66h,	60h,6eh
+		db	66h,66h,	3ch,00h
+		db	66h,66h,	66h,7eh
+		db	66h,66h,	66h,00h
+		db	7eh,18h,	18h,18h
+		db	18h,18h,	7eh,00h
+		db	3eh,0ch,	0ch,0ch
+		db	0ch,6ch,	38h,00h
+		db	66h,6ch,	78h,70h
+		db	78h,6ch,	66h,00h
+		db	60h,60h,	60h,60h
+		db	60h,60h,	7eh,00h
+		db	63h,77h,	7fh,6bh
+		db	6bh,63h,	63h,00h
+		db	66h,66h,	76h,7eh
+		db	6eh,66h,	66h,00h
+		db	3ch,66h,	66h,66h
+		db	66h,66h,	3ch,00h
+		db	7ch,66h,	66h,7ch
+		db	60h,60h,	60h,00h
+		db	3ch,66h,	66h,66h
+		db	6ah,6ch,	36h,00h
+		db	7ch,66h,	66h,7ch
+		db	6ch,66h,	66h,00h
+		db	3ch,66h,	60h,3ch
+		db	06h,66h,	3ch,00h
+		db	7eh,18h,	18h,18h
+		db	18h,18h,	18h,00h
+		db	66h,66h,	66h,66h
+		db	66h,66h,	3ch,00h
+		db	66h,66h,	66h,66h
+		db	66h,3ch,	18h,00h
+		db	63h,63h,	6bh,6bh
+		db	7fh,77h,	63h,00h
+		db	66h,66h,	3ch,18h
+		db	3ch,66h,	66h,00h
+		db	66h,66h,	66h,3ch
+		db	18h,18h,	18h,00h
+		db	7eh,06h,	0ch,18h
+		db	30h,60h,	7eh,00h
+		db	7ch,60h,	60h,60h
+		db	60h,60h,	7ch,00h
+		db	00h,60h,	30h,18h
+		db	0ch,06h,	00h,00h
+		db	3eh,06h,	06h,06h
+		db	06h,06h,	3eh,00h
+		db	18h,3ch,	66h,42h
+		db	00h,00h,	00h,00h
+		db	00h,00h,	00h,00h
+		db	00h,00h,	00h,ffh
+		db	1ch,36h,	30h,7ch
+		db	30h,30h,	7eh,00h
+		db	00h,00h,	3ch,06h
+		db	3eh,66h,	3eh,00h
+		db	60h,60h,	7ch,66h
+		db	66h,66h,	7ch,00h
+		db	00h,00h,	3ch,66h
+		db	60h,66h,	3ch,00h
+		db	06h,06h,	3eh,66h
+		db	66h,66h,	3eh,00h
+		db	00h,00h,	3ch,66h
+		db	7eh,60h,	3ch,00h
+		db	1ch,30h,	30h,7ch
+		db	30h,30h,	30h,00h
+		db	00h,00h,	3eh,66h
+		db	66h,3eh,	06h,3ch
+		db	60h,60h,	7ch,66h
+		db	66h,66h,	66h,00h
+		db	18h,00h,	38h,18h
+		db	18h,18h,	3ch,00h
+		db	18h,00h,	38h,18h
+		db	18h,18h,	18h,70h
+		db	60h,60h,	66h,6ch
+		db	78h,6ch,	66h,00h
+		db	38h,18h,	18h,18h
+		db	18h,18h,	3ch,00h
+		db	00h,00h,	36h,7fh
+		db	6bh,6bh,	63h,00h
+		db	00h,00h,	7ch,66h
+		db	66h,66h,	66h,00h
+		db	00h,00h,	3ch,66h
+		db	66h,66h,	3ch,00h
+		db	00h,00h,	7ch,66h
+		db	66h,7ch,	60h,60h
+		db	00h,00h,	3eh,66h
+		db	66h,3eh,	06h,07h
+		db	00h,00h,	6ch,76h
+		db	60h,60h,	60h,00h
+		db	00h,00h,	3eh,60h
+		db	3ch,06h,	7ch,00h
+		db	30h,30h,	7ch,30h
+		db	30h,30h,	1ch,00h
+		db	00h,00h,	66h,66h
+		db	66h,66h,	3eh,00h
+		db	00h,00h,	66h,66h
+		db	66h,3ch,	18h,00h
+		db	00h,00h,	63h,6bh
+		db	6bh,7fh,	36h,00h
+		db	00h,00h,	66h,3ch
+		db	18h,3ch,	66h,00h
+		db	00h,00h,	66h,66h
+		db	66h,3eh,	06h,3ch
+		db	00h,00h,	7eh,0ch
+		db	18h,30h,	7eh,00h
+		db	0ch,18h,	18h,70h
+		db	18h,18h,	0ch,00h
+		db	18h,18h,	18h,00h
+		db	18h,18h,	18h,00h
+		db	30h,18h,	18h,0eh
+		db	18h,18h,	30h,00h
+		db	31h,6bh,	46h,00h
+		db	00h,00h,	00h,00h 
+	FontDataEnd:
+	-->
+
+	<textarea id="include-math.asm">
+	;====================================
+	; HL *= DE
+	; Based on Z88DK runtime library
+	;====================================
+	Multiply:
+			ld      b,16
+			ld      a,h
+			ld      c,l
+			ld      hl,0
+	Multiply_Loop:
+			add     hl,hl
+			rl      c
+			rla                  
+			jr      nc, Multiply_Inner_Loop
+			add     hl,de
+	Multiply_Inner_Loop:
+			djnz    Multiply_Loop
+			ret
+
+	;====================================
+	; hl = de/hl   de=de % hl
+	; Based on Z88DK runtime library
+	;====================================
+	Divide:
+	; Check for dividing by zero beforehand
+			ld      a,h
+			or      l
+			ret     z
+			ex      de,hl
+	;First have to obtain signs for quotient and remainder
+			ld      a,h     ;dividend
+			and     128
+			ld      b,a     ;keep it safe
+			jr      z,l_div0
+	;if -ve make into positive number!
+			sub     a
+			sub     l
+			ld      l,a
+			sbc     a,a
+			sub     h
+			ld      h,a
+	l_div0:
+			ld      a,d     ;divisor
+			and     128
+			xor     b       
+			ld      c,a     ;keep it safe (Quotient)
+			bit     7,d
+			jr      z,l_div01
+			sub     a
+			sub     e
+			ld      e,a
+			sbc     a,a
+			sub     d
+			ld      d,a
+	l_div01:
+	;Check for dividing by zero...
+			ex      de,hl
+			ld      a,h
+			or      l
+			ret     z       ;return hl=0, de=divisor
+			ex      de,hl
+			push    bc      ;keep the signs safe
+	;Now, we have two positive numbers so can do division no problems..
+			ld      a,16    ;counter
+			ld      b,h     ;arg1
+			ld      c,l
+			ld      hl,0    ;res1
+	; hl=res1 de=arg2 bc=arg1
+			and     a
+	l_div1:
+			rl      c       ;arg1 << 1 -> arg1
+			rl      b
+			rl      l       ;res1 << 1 -> res1
+			rl      h
+			sbc     hl,de   ;res1 - arg2 -> res1
+			jr      nc,l_div2
+			add     hl,de   ;res1 + arg2 -> res1
+	l_div2:
+			ccf
+			dec     a
+			jr      nz,l_div1
+			rl      c       ;arg1 << 1 -> arg1
+			rl      b
+	;Have to return arg1 in hl and res1 in de
+			ld      d,b
+			ld      e,c
+	;Now do the signs..
+			pop     bc      ;c holds quotient, b holds remainder
+	;de holds quotient, hl holds remainder
+			ld      a,c
+			call    dosign  ;quotient
+			ld      a,b
+			ex      de,hl   ;remainder (into de)
+	;Do the signs - de holds number to sign, a holds sign
+	dosign:
+			and     128
+			ret     z       ;not negative so okay..
+			sub     a
+			sub     e
+			ld      e,a
+			sbc     a,a
+			sub     d
+			ld      d,a
+			ret
+	</textarea>
+	
+</body>
+
+</html> 

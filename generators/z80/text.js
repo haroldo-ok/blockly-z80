@@ -235,9 +235,12 @@ Blockly.Z80['text_trim'] = function(block) {
 
 Blockly.Z80['text_print'] = function(block) {
   // Print statement.
-  var argument0 = Blockly.Z80.valueToCode(block, 'TEXT',
-      Blockly.Z80.ORDER_NONE) || Blockly.Z80.text_registered_('');
-  return argument0 + '\tcall text_print\n';
+  var argument0 = Blockly.Z80.valueToCode(block, 'TEXT', Blockly.Z80.ORDER_NONE) || 
+			Blockly.Z80.text_registered_('');
+  var isNumber = Blockly.Z80.inputType_(block, 'TEXT') == 'Number';
+  
+  return argument0 + 
+		(isNumber ? '\tcall number_print\n' : '\tcall text_print\n');
 };
 
 Blockly.Z80['text_prompt'] = function(block) {
