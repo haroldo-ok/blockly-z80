@@ -41,24 +41,31 @@ Blockly.Z80['math_number'] = function(block) {
 Blockly.Z80['math_arithmetic'] = function(block) {
   // Basic arithmetic operators, and power.
   var OPERATORS = {
-    'ADD': [' + ', Blockly.Z80.ORDER_ADDITION],
-    'MINUS': [' - ', Blockly.Z80.ORDER_SUBTRACTION],
-    'MULTIPLY': [' * ', Blockly.Z80.ORDER_MULTIPLICATION],
-    'DIVIDE': [' / ', Blockly.Z80.ORDER_DIVISION],
+    'ADD': ['add hl, de', Blockly.Z80.ORDER_ATOMIC],
+    'MINUS': ['or a\n\tex de, hl\n\tsbc hl, de', Blockly.Z80.ORDER_ATOMIC],
+    'MULTIPLY': ['call Multiply', Blockly.Z80.ORDER_ATOMIC],
+    'DIVIDE': ['call Divide', Blockly.Z80.ORDER_ATOMIC],
     'POWER': [null, Blockly.Z80.ORDER_COMMA]  // Handle power separately.
   };
-  var tuple = OPERATORS[block.getFieldValue('OP')];
+  
+  var opType = block.getFieldValue('OP');
+  var tuple = OPERATORS[opType];
   var operator = tuple[0];
   var order = tuple[1];
-  var argument0 = Blockly.Z80.valueToCode(block, 'A', order) || '0';
-  var argument1 = Blockly.Z80.valueToCode(block, 'B', order) || '0';
+  var argument0 = Blockly.Z80.valueToCode(block, 'A', order) || '\tld hl, 0\n';
+  var argument1 = Blockly.Z80.valueToCode(block, 'B', order) || '\tld hl, 0\n';
   var code;
-  // Power in Z80 requires a special case since it has no operator.
+  
   if (!operator) {
-    code = 'Math.pow(' + argument0 + ', ' + argument1 + ')';
-    return [code, Blockly.Z80.ORDER_FUNCTION_CALL];
+	return '\t' + opType + ' is not supported';
   }
-  code = argument0 + operator + argument1;
+    
+  code = argument0 +
+		'\tpush hl\n' + // Saves first argument
+		argument1 +
+		'\tpop de\n' + // Restores first argument into DE
+		'\t' + operator + '\n'; 
+		
   return [code, order];
 };
 
