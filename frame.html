@@ -44,17 +44,104 @@
       <block type="controls_if"></block>
       <block type="logic_compare"></block>
 	-->
-      <block type="controls_repeat"></block>
+<!--      <block type="controls_repeat"></block> -->
 	  <!--
       <block type="controls_repeat_ext"></block>
 	  --->
-      <block type="math_number"></block>
-      <block type="math_arithmetic"></block>
+<!--	  
       <block type="text"></block>
       <block type="text_print"></block>
+-->
+      <category name="Arithmetic">
+		  <block type="math_number"></block>
+		  <block type="math_arithmetic"></block>
+	  </category>
 
-      <block type="variables_get"></block>
-      <block type="variables_set"></block>
+      <category name="Variables">
+		  <block type="variables_get"></block>
+		  <block type="variables_set"></block>
+	  </category>
+
+      <category name="Text">
+		  <block type="text"></block>
+		  <block type="text_print"></block>
+	  </category>
+
+      <category name="Control">
+		  <block type="controls_repeat"></block>
+	  </category>
+      <category name="Example">
+		  <!-- Prints OK -->		
+		  <block type="text_print">
+			<value name="TEXT">
+				<block type="text">
+				  <field name="TEXT">OK</field>
+				</block>
+			</value>
+		  </block>
+		  
+		  <!-- Prints 123 -->		
+		  <block type="text_print">
+			<value name="TEXT">
+				<block type="math_number">
+				  <field name="NUM">123</field>
+				</block>
+			</value>
+		  </block>
+
+		  <!-- Counts to 10 -->			
+		  <block type="variables_set" id="11" inline="true" x="74" y="86">
+			<field name="VAR">Value</field>
+			<value name="VALUE">
+			  <block type="math_number" id="14">
+				<field name="NUM">1</field>
+			  </block>
+			</value>
+			<next>
+			  <block type="controls_repeat" id="16">
+				<field name="TIMES">10</field>
+				<statement name="DO">
+				  <block type="text_print" id="19" inline="false">
+					<value name="TEXT">
+					  <block type="variables_get" id="25">
+						<field name="VAR">Value</field>
+					  </block>
+					</value>
+					<next>
+					  <block type="text_print" id="28" inline="false">
+						<value name="TEXT">
+						  <block type="text" id="31">
+							<field name="TEXT"> </field>
+						  </block>
+						</value>
+						<next>
+						  <block type="variables_set" id="34" inline="true">
+							<field name="VAR">Value</field>
+							<value name="VALUE">
+							  <block type="math_arithmetic" id="37" inline="true">
+								<field name="OP">ADD</field>
+								<value name="A">
+								  <block type="variables_get" id="40">
+									<field name="VAR">Value</field>
+								  </block>
+								</value>
+								<value name="B">
+								  <block type="math_number" id="43">
+									<field name="NUM">1</field>
+								  </block>
+								</value>
+							  </block>
+							</value>
+						  </block>
+						</next>
+					  </block>
+					</next>
+				  </block>
+				</statement>
+			  </block>
+			</next>
+		  </block>
+	  </category>
     </xml>
   </body>
 </html>
