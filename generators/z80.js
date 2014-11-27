@@ -132,15 +132,19 @@ Blockly.Z80.finish = function(code) {
 	stringDefs.push(Blockly.Z80.strings_.strings[string] + ':\tdb ' + Blockly.Z80.quote_(string) + ', 0');
   }
   
-  return Blockly.Z80.formatSource_(
+  var generatedSource =
 		'\tinclude "sms.asm"\n' +
 		definitions.join('\n\n') + 
 		'\n\nMAIN:\n' + code + 
 		'\n\nprogram_done:\tjr program_done' +
 		'\n\n\n' + stringDefs.join('\n') +
 		'\n\n' +
-		'\tinclude "data.asm"\n'
-  );
+		'\tinclude "data.asm"\n';
+		
+  var optimizedSource = Blockly.Z80.optimizeSource_(generatedSource);
+  var formattedSource = Blockly.Z80.formatSource_(optimizedSource);
+		
+  return formattedSource;
 };
 
 /**
@@ -236,4 +240,23 @@ Blockly.Z80.scrub_ = function(block, code) {
   var nextBlock = block.nextConnection && block.nextConnection.targetBlock();
   var nextCode = Blockly.Z80.blockToCode(nextBlock);
   return commentCode + code + nextCode;
+};
+
+/**
+ * This is a very simple peephole optimizer for the generated ASM code
+ */
+Blockly.Z80.optimizeSource_ = function(code) {
+	/*
+		-- Turns --
+		ld hl, 12
+		push hl
+		ld hl, 34
+		pop de
+		-- Into --
+		ld de, 12
+		ld hl, 34
+	*/
+	code = code.replace(/^ld hl, (\w+)\s+push hl\s+ld hl, (\w+)\s+pop de\n/mg, 'ld de, $1\nld hl, $2\n');
+	
+	return code
 };
