@@ -134,6 +134,7 @@
 						asm.patch();
 					
 						BitZ80.code = asm.aMem;
+						BitZ80.labels = asm.aLabels;
 						
 						bzOut.value = 'OK';
 					} catch (e) {
@@ -313,96 +314,6 @@
 		ret
 
 
-	text_print:
-		ld a,(hl)
-		or a
-		jr z, text_print_end
-		sub 32
-		out (VDPData),a
-		xor a
-		out (VDPData),a
-		inc hl
-		jr text_print
-	text_print_end:
-		ret
-
-	number_print:
-		ld a, l
-		add a, 48-32
-		out (VDPData),a
-		xor a
-		out (VDPData),a
-		ret
-
-	</textarea>
-	
-	<textarea id="include-data.asm">
-	;==============================================================
-	; Data
-	;==============================================================
-
-	PaletteData:
-		db $00,$3f ; Black, white
-	PaletteDataEnd:
-
-	; VDP initialisation data
-	VDPInitData:
-		db $04,$80,$00,$81,$ff,$82,$ff,$85,$ff,$86,$ff,$87,$00,$88,$00,$89,$ff,$8a
-	VDPInitDataEnd:
-
-	FontData:
-		db 00h,00h,00h,00h,00h,00h,00h,00h,18h,18h,18h,18h,18h,00h,18h,00h
-		db 6ch,6ch,6ch,00h,00h,00h,00h,00h,36h,36h,7fh,36h,7fh,36h,36h,00h
-		db 0ch,3fh,68h,3eh,0bh,7eh,18h,00h,60h,66h,0ch,18h,30h,66h,06h,00h
-		db 38h,6ch,6ch,38h,6dh,66h,3bh,00h,0ch,18h,30h,00h,00h,00h,00h,00h
-		db 0ch,18h,30h,30h,30h,18h,0ch,00h,30h,18h,0ch,0ch,0ch,18h,30h,00h
-		db 00h,18h,7eh,3ch,7eh,18h,00h,00h,00h,18h,18h,7eh,18h,18h,00h,00h
-		db 00h,00h,00h,00h,00h,18h,18h,30h,00h,00h,00h,7eh,00h,00h,00h,00h
-		db 00h,00h,00h,00h,00h,18h,18h,00h,00h,06h,0ch,18h,30h,60h,00h,00h
-		db 3ch,66h,6eh,7eh,76h,66h,3ch,00h,18h,38h,18h,18h,18h,18h,7eh,00h
-		db 3ch,66h,06h,0ch,18h,30h,7eh,00h,3ch,66h,06h,1ch,06h,66h,3ch,00h
-		db 0ch,1ch,3ch,6ch,7eh,0ch,0ch,00h,7eh,60h,7ch,06h,06h,66h,3ch,00h
-		db 1ch,30h,60h,7ch,66h,66h,3ch,00h,7eh,06h,0ch,18h,30h,30h,30h,00h
-		db 3ch,66h,66h,3ch,66h,66h,3ch,00h,3ch,66h,66h,3eh,06h,0ch,38h,00h
-		db 00h,00h,18h,18h,00h,18h,18h,00h,00h,00h,18h,18h,00h,18h,18h,30h
-		db 0ch,18h,30h,60h,30h,18h,0ch,00h,00h,00h,7eh,00h,7eh,00h,00h,00h
-		db 30h,18h,0ch,06h,0ch,18h,30h,00h,3ch,66h,0ch,18h,18h,00h,18h,00h
-		db 3ch,66h,6eh,6ah,6eh,60h,3ch,00h,3ch,66h,66h,7eh,66h,66h,66h,00h
-		db 7ch,66h,66h,7ch,66h,66h,7ch,00h,3ch,66h,60h,60h,60h,66h,3ch,00h
-		db 78h,6ch,66h,66h,66h,6ch,78h,00h,7eh,60h,60h,7ch,60h,60h,7eh,00h
-		db 7eh,60h,60h,7ch,60h,60h,60h,00h,3ch,66h,60h,6eh,66h,66h,3ch,00h
-		db 66h,66h,66h,7eh,66h,66h,66h,00h,7eh,18h,18h,18h,18h,18h,7eh,00h
-		db 3eh,0ch,0ch,0ch,0ch,6ch,38h,00h,66h,6ch,78h,70h,78h,6ch,66h,00h
-		db 60h,60h,60h,60h,60h,60h,7eh,00h,63h,77h,7fh,6bh,6bh,63h,63h,00h
-		db 66h,66h,76h,7eh,6eh,66h,66h,00h,3ch,66h,66h,66h,66h,66h,3ch,00h
-		db 7ch,66h,66h,7ch,60h,60h,60h,00h,3ch,66h,66h,66h,6ah,6ch,36h,00h
-		db 7ch,66h,66h,7ch,6ch,66h,66h,00h,3ch,66h,60h,3ch,06h,66h,3ch,00h
-		db 7eh,18h,18h,18h,18h,18h,18h,00h,66h,66h,66h,66h,66h,66h,3ch,00h
-		db 66h,66h,66h,66h,66h,3ch,18h,00h,63h,63h,6bh,6bh,7fh,77h,63h,00h
-		db 66h,66h,3ch,18h,3ch,66h,66h,00h,66h,66h,66h,3ch,18h,18h,18h,00h
-		db 7eh,06h,0ch,18h,30h,60h,7eh,00h,7ch,60h,60h,60h,60h,60h,7ch,00h
-		db 00h,60h,30h,18h,0ch,06h,00h,00h,3eh,06h,06h,06h,06h,06h,3eh,00h
-		db 18h,3ch,66h,42h,00h,00h,00h,00h,00h,00h,00h,00h,00h,00h,00h,ffh
-		db 1ch,36h,30h,7ch,30h,30h,7eh,00h,00h,00h,3ch,06h,3eh,66h,3eh,00h
-		db 60h,60h,7ch,66h,66h,66h,7ch,00h,00h,00h,3ch,66h,60h,66h,3ch,00h
-		db 06h,06h,3eh,66h,66h,66h,3eh,00h,00h,00h,3ch,66h,7eh,60h,3ch,00h
-		db 1ch,30h,30h,7ch,30h,30h,30h,00h,00h,00h,3eh,66h,66h,3eh,06h,3ch
-		db 60h,60h,7ch,66h,66h,66h,66h,00h,18h,00h,38h,18h,18h,18h,3ch,00h
-		db 18h,00h,38h,18h,18h,18h,18h,70h,60h,60h,66h,6ch,78h,6ch,66h,00h
-		db 38h,18h,18h,18h,18h,18h,3ch,00h,00h,00h,36h,7fh,6bh,6bh,63h,00h
-		db 00h,00h,7ch,66h,66h,66h,66h,00h,00h,00h,3ch,66h,66h,66h,3ch,00h
-		db 00h,00h,7ch,66h,66h,7ch,60h,60h,00h,00h,3eh,66h,66h,3eh,06h,07h
-		db 00h,00h,6ch,76h,60h,60h,60h,00h,00h,00h,3eh,60h,3ch,06h,7ch,00h
-		db 30h,30h,7ch,30h,30h,30h,1ch,00h,00h,00h,66h,66h,66h,66h,3eh,00h
-		db 00h,00h,66h,66h,66h,3ch,18h,00h,00h,00h,63h,6bh,6bh,7fh,36h,00h
-		db 00h,00h,66h,3ch,18h,3ch,66h,00h,00h,00h,66h,66h,66h,3eh,06h,3ch
-		db 00h,00h,7eh,0ch,18h,30h,7eh,00h,0ch,18h,18h,70h,18h,18h,0ch,00h
-		db 18h,18h,18h,00h,18h,18h,18h,00h,30h,18h,18h,0eh,18h,18h,30h,00h
-		db	31h,6bh,46h,00h,00h,00h,00h,00h 
-	FontDataEnd:
-	</textarea>
-	
-	<textarea id="include-not-math.asm">
 	;====================================
 	; HL *= DE
 	; Based on Z88DK runtime library
@@ -507,6 +418,123 @@
 			sub     d
 			ld      d,a
 			ret
+
+			
+	;====================================
+	; Print text
+	;====================================
+	text_print:
+		ld a,(hl)
+		or a
+		jr z, text_print_end
+		sub 32
+		out (VDPData),a
+		xor a
+		out (VDPData),a
+		inc hl
+		jr text_print
+	text_print_end:
+		ret
+
+	;====================================
+	; Print number
+	;====================================
+	number_print:
+		xor a
+		push af		; a = 0 will be used as a terminator
+		; initially, hl contains the number
+	number_print_digits:
+		ex	de, hl	; Now, DE contains the number
+		ld	hl, 10	; It will be divided by 10
+		call Divide	; Now, DE contains the digit, and HL contains the part that hasn't been processed, yet.
+		
+		ld a, e
+		add a, 48-32 ; Adds '0'
+		push af		; Saves the digit for later (TODO: Should optimize this to use just one byte per digit)
+		
+		ld a, l
+		or h
+		jr z, number_print_digits_done
+		jr number_print_digits	; There are still digits to print
+	number_print_digits_done:
+		
+	number_print_output_loop:
+		pop af
+		or a
+		jr z, number_print_output_loop_done		
+		out (VDPData),a
+		xor a
+		out (VDPData),a
+		jr number_print_output_loop
+	number_print_output_loop_done:
+		ret
+
+	</textarea>
+	
+	<textarea id="include-data.asm">
+	;==============================================================
+	; Data
+	;==============================================================
+
+	PaletteData:
+		db $00,$3f ; Black, white
+	PaletteDataEnd:
+
+	; VDP initialisation data
+	VDPInitData:
+		db $04,$80,$00,$81,$ff,$82,$ff,$85,$ff,$86,$ff,$87,$00,$88,$00,$89,$ff,$8a
+	VDPInitDataEnd:
+
+	FontData:
+		db 00h,00h,00h,00h,00h,00h,00h,00h,18h,18h,18h,18h,18h,00h,18h,00h
+		db 6ch,6ch,6ch,00h,00h,00h,00h,00h,36h,36h,7fh,36h,7fh,36h,36h,00h
+		db 0ch,3fh,68h,3eh,0bh,7eh,18h,00h,60h,66h,0ch,18h,30h,66h,06h,00h
+		db 38h,6ch,6ch,38h,6dh,66h,3bh,00h,0ch,18h,30h,00h,00h,00h,00h,00h
+		db 0ch,18h,30h,30h,30h,18h,0ch,00h,30h,18h,0ch,0ch,0ch,18h,30h,00h
+		db 00h,18h,7eh,3ch,7eh,18h,00h,00h,00h,18h,18h,7eh,18h,18h,00h,00h
+		db 00h,00h,00h,00h,00h,18h,18h,30h,00h,00h,00h,7eh,00h,00h,00h,00h
+		db 00h,00h,00h,00h,00h,18h,18h,00h,00h,06h,0ch,18h,30h,60h,00h,00h
+		db 3ch,66h,6eh,7eh,76h,66h,3ch,00h,18h,38h,18h,18h,18h,18h,7eh,00h
+		db 3ch,66h,06h,0ch,18h,30h,7eh,00h,3ch,66h,06h,1ch,06h,66h,3ch,00h
+		db 0ch,1ch,3ch,6ch,7eh,0ch,0ch,00h,7eh,60h,7ch,06h,06h,66h,3ch,00h
+		db 1ch,30h,60h,7ch,66h,66h,3ch,00h,7eh,06h,0ch,18h,30h,30h,30h,00h
+		db 3ch,66h,66h,3ch,66h,66h,3ch,00h,3ch,66h,66h,3eh,06h,0ch,38h,00h
+		db 00h,00h,18h,18h,00h,18h,18h,00h,00h,00h,18h,18h,00h,18h,18h,30h
+		db 0ch,18h,30h,60h,30h,18h,0ch,00h,00h,00h,7eh,00h,7eh,00h,00h,00h
+		db 30h,18h,0ch,06h,0ch,18h,30h,00h,3ch,66h,0ch,18h,18h,00h,18h,00h
+		db 3ch,66h,6eh,6ah,6eh,60h,3ch,00h,3ch,66h,66h,7eh,66h,66h,66h,00h
+		db 7ch,66h,66h,7ch,66h,66h,7ch,00h,3ch,66h,60h,60h,60h,66h,3ch,00h
+		db 78h,6ch,66h,66h,66h,6ch,78h,00h,7eh,60h,60h,7ch,60h,60h,7eh,00h
+		db 7eh,60h,60h,7ch,60h,60h,60h,00h,3ch,66h,60h,6eh,66h,66h,3ch,00h
+		db 66h,66h,66h,7eh,66h,66h,66h,00h,7eh,18h,18h,18h,18h,18h,7eh,00h
+		db 3eh,0ch,0ch,0ch,0ch,6ch,38h,00h,66h,6ch,78h,70h,78h,6ch,66h,00h
+		db 60h,60h,60h,60h,60h,60h,7eh,00h,63h,77h,7fh,6bh,6bh,63h,63h,00h
+		db 66h,66h,76h,7eh,6eh,66h,66h,00h,3ch,66h,66h,66h,66h,66h,3ch,00h
+		db 7ch,66h,66h,7ch,60h,60h,60h,00h,3ch,66h,66h,66h,6ah,6ch,36h,00h
+		db 7ch,66h,66h,7ch,6ch,66h,66h,00h,3ch,66h,60h,3ch,06h,66h,3ch,00h
+		db 7eh,18h,18h,18h,18h,18h,18h,00h,66h,66h,66h,66h,66h,66h,3ch,00h
+		db 66h,66h,66h,66h,66h,3ch,18h,00h,63h,63h,6bh,6bh,7fh,77h,63h,00h
+		db 66h,66h,3ch,18h,3ch,66h,66h,00h,66h,66h,66h,3ch,18h,18h,18h,00h
+		db 7eh,06h,0ch,18h,30h,60h,7eh,00h,7ch,60h,60h,60h,60h,60h,7ch,00h
+		db 00h,60h,30h,18h,0ch,06h,00h,00h,3eh,06h,06h,06h,06h,06h,3eh,00h
+		db 18h,3ch,66h,42h,00h,00h,00h,00h,00h,00h,00h,00h,00h,00h,00h,ffh
+		db 1ch,36h,30h,7ch,30h,30h,7eh,00h,00h,00h,3ch,06h,3eh,66h,3eh,00h
+		db 60h,60h,7ch,66h,66h,66h,7ch,00h,00h,00h,3ch,66h,60h,66h,3ch,00h
+		db 06h,06h,3eh,66h,66h,66h,3eh,00h,00h,00h,3ch,66h,7eh,60h,3ch,00h
+		db 1ch,30h,30h,7ch,30h,30h,30h,00h,00h,00h,3eh,66h,66h,3eh,06h,3ch
+		db 60h,60h,7ch,66h,66h,66h,66h,00h,18h,00h,38h,18h,18h,18h,3ch,00h
+		db 18h,00h,38h,18h,18h,18h,18h,70h,60h,60h,66h,6ch,78h,6ch,66h,00h
+		db 38h,18h,18h,18h,18h,18h,3ch,00h,00h,00h,36h,7fh,6bh,6bh,63h,00h
+		db 00h,00h,7ch,66h,66h,66h,66h,00h,00h,00h,3ch,66h,66h,66h,3ch,00h
+		db 00h,00h,7ch,66h,66h,7ch,60h,60h,00h,00h,3eh,66h,66h,3eh,06h,07h
+		db 00h,00h,6ch,76h,60h,60h,60h,00h,00h,00h,3eh,60h,3ch,06h,7ch,00h
+		db 30h,30h,7ch,30h,30h,30h,1ch,00h,00h,00h,66h,66h,66h,66h,3eh,00h
+		db 00h,00h,66h,66h,66h,3ch,18h,00h,00h,00h,63h,6bh,6bh,7fh,36h,00h
+		db 00h,00h,66h,3ch,18h,3ch,66h,00h,00h,00h,66h,66h,66h,3eh,06h,3ch
+		db 00h,00h,7eh,0ch,18h,30h,7eh,00h,0ch,18h,18h,70h,18h,18h,0ch,00h
+		db 18h,18h,18h,00h,18h,18h,18h,00h,30h,18h,18h,0eh,18h,18h,30h,00h
+		db	31h,6bh,46h,00h,00h,00h,00h,00h 
+	FontDataEnd:
 	</textarea>
 	
 </body>

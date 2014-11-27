@@ -33,8 +33,7 @@ Blockly.Z80['math_number'] = function(block) {
   // Numeric value.
   var code = parseInt(block.getFieldValue('NUM'));
   return [
-		'\tld hl, ' + code + '\n' /*+ 
-		'\tld de, 3\n\tcall Multiply\n'*/, 
+		'\tld hl, ' + code + '\n', 
 		Blockly.Z80.ORDER_ATOMIC
   ];
 };
