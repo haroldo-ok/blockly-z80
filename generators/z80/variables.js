@@ -33,14 +33,15 @@ Blockly.Z80['variables_get'] = function(block) {
   // Variable getter.
   var code = Blockly.Z80.variableDB_.getName(block.getFieldValue('VAR'),
       Blockly.Variables.NAME_TYPE);
+  code = 'ld hl, (' + code + ')\n';	 
   return [code, Blockly.Z80.ORDER_ATOMIC];
 };
 
 Blockly.Z80['variables_set'] = function(block) {
   // Variable setter.
   var argument0 = Blockly.Z80.valueToCode(block, 'VALUE',
-      Blockly.Z80.ORDER_ASSIGNMENT) || '0';
+      Blockly.Z80.ORDER_ASSIGNMENT) || 'ld hl, 0\n';
   var varName = Blockly.Z80.variableDB_.getName(
       block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
-  return varName + ' = ' + argument0 + ';\n';
+  return argument0 + 'ld (' + varName + '), hl\n';
 };
