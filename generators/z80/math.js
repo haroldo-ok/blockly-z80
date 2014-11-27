@@ -33,7 +33,7 @@ Blockly.Z80['math_number'] = function(block) {
   // Numeric value.
   var code = parseInt(block.getFieldValue('NUM'));
   return [
-		'\tld hl, ' + code + '\n', 
+		'ld hl, ' + code + '\n', 
 		Blockly.Z80.ORDER_ATOMIC
   ];
 };
@@ -42,7 +42,7 @@ Blockly.Z80['math_arithmetic'] = function(block) {
   // Basic arithmetic operators, and power.
   var OPERATORS = {
     'ADD': ['add hl, de', Blockly.Z80.ORDER_ATOMIC],
-    'MINUS': ['or a\n\tex de, hl\n\tsbc hl, de', Blockly.Z80.ORDER_ATOMIC],
+    'MINUS': ['or a\nex de, hl\nsbc hl, de', Blockly.Z80.ORDER_ATOMIC],
     'MULTIPLY': ['call Multiply', Blockly.Z80.ORDER_ATOMIC],
     'DIVIDE': ['call Divide', Blockly.Z80.ORDER_ATOMIC],
     'POWER': [null, Blockly.Z80.ORDER_COMMA]  // Handle power separately.
@@ -52,19 +52,19 @@ Blockly.Z80['math_arithmetic'] = function(block) {
   var tuple = OPERATORS[opType];
   var operator = tuple[0];
   var order = tuple[1];
-  var argument0 = Blockly.Z80.valueToCode(block, 'A', order) || '\tld hl, 0\n';
-  var argument1 = Blockly.Z80.valueToCode(block, 'B', order) || '\tld hl, 0\n';
+  var argument0 = Blockly.Z80.valueToCode(block, 'A', order) || 'ld hl, 0\n';
+  var argument1 = Blockly.Z80.valueToCode(block, 'B', order) || 'ld hl, 0\n';
   var code;
   
   if (!operator) {
-	return '\t' + opType + ' is not supported';
+	return opType + ' is not supported';
   }
     
   code = argument0 +
-		'\tpush hl\n' + // Saves first argument
+		'push hl\n' + // Saves first argument
 		argument1 +
-		'\tpop de\n' + // Restores first argument into DE
-		'\t' + operator + '\n'; 
+		'pop de\n' + // Restores first argument into DE
+		operator + '\n'; 
 		
   return [code, order];
 };

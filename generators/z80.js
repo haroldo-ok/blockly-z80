@@ -132,14 +132,34 @@ Blockly.Z80.finish = function(code) {
 	stringDefs.push(Blockly.Z80.strings_.strings[string] + ':\tdb ' + Blockly.Z80.quote_(string) + ', 0');
   }
   
-  return '\tinclude "sms.asm"\n' +
-//		'\tinclude "math.asm"\n' +
+  return Blockly.Z80.formatSource_(
+		'\tinclude "sms.asm"\n' +
 		definitions.join('\n\n') + 
 		'\n\nMAIN:\n' + code + 
 		'\n\nprogram_done:\tjr program_done' +
 		'\n\n\n' + stringDefs.join('\n') +
 		'\n\n' +
-		'\tinclude "data.asm"\n';
+		'\tinclude "data.asm"\n'
+  );
+};
+
+/**
+ * Formats the ASM source to look pretty
+ */
+Blockly.Z80.formatSource_ = function(source) {
+	return source
+		// Split lines
+		.split(/\r?\n/g)
+		// For each line
+		.map(function(lin){
+			return lin.trim()
+				// Each line is formatted as [label:] <tab> [code]
+				.replace(/^(\w+:|)\s*(.*)$/, '$1\t$2')
+				// Empty out the empty lines
+				.replace(/^\s+$/, ''); 
+		})
+		// Rejoin lines
+		.join('\n')
 };
 
 /**

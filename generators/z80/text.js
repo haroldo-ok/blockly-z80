@@ -29,7 +29,7 @@ goog.provide('Blockly.Z80.text');
 goog.require('Blockly.Z80');
 
 Blockly.Z80.text_ = function(label) {
-	return '\tld hl, ' + label + '\n';
+	return 'ld hl, ' + label + '\n';
 };
 
 Blockly.Z80.text_registered_ = function(string) {
@@ -240,7 +240,7 @@ Blockly.Z80['text_print'] = function(block) {
   var isNumber = Blockly.Z80.inputType_(block, 'TEXT') == 'Number';
   
   return argument0 + 
-		(isNumber ? '\tcall number_print\n' : '\tcall text_print\n');
+		(isNumber ? 'call number_print\n' : 'call text_print\n');
 };
 
 Blockly.Z80['text_prompt'] = function(block) {
