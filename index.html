@@ -253,8 +253,8 @@
 		;==============================================================
 		; Load orc tiles
 		;==============================================================
-		; 1. Set VRAM write address to tile index 96
-		ld hl,$0C00 | VRAMWrite
+		; 1. Set VRAM write address to tile index 256
+		ld hl,$2000 | VRAMWrite
 		call SetVDPAddress
 		; 2. Output tile data
 		ld hl,OrcData              ; Location of tile data
@@ -264,7 +264,7 @@
 		;==============================================================
 		; Turn screen on
 		;==============================================================
-		ld a,01000000b
+		ld a,01000010b
 	;          ||||||`- Zoomed sprites -> 16x16 pixels
 	;          |||||`-- Doubled sprites -> 2 tiles per sprite, 8x16
 	;          ||||`--- Mega Drive mode 5 enable
@@ -278,6 +278,26 @@
 
     ; Infinite loop to stop program
 	; Infinite_Loop :  jr Infinite_Loop
+	
+	; Show a sprite
+		; Left side
+		ld a, 96
+		ld (hw_sprites_y), a
+		ld (hw_sprites_xc), a
+		ld a, 0
+		ld (hw_sprites_xc+1), a
+		; Right side
+		ld a, 96
+		ld (hw_sprites_y+1), a
+		ld a, 96 + 8
+		ld (hw_sprites_xc+2), a
+		ld a, 2
+		ld (hw_sprites_xc+3), a
+		; Sprite list terminator
+		ld a, 208
+		ld (hw_sprites_y+2), a
+		call UpdateSprites
+		
 	
 	; call main program
 		; Set VRAM write address to tilemap index 0
