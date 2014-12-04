@@ -180,7 +180,12 @@
 	;==============================================================
 	; RAM defines
 	;==============================================================
-	UsrRAMStart: equ RAMStart + 0
+	hw_sprites_y:		equ RAMStart + 0
+	hw_sprites_y_len:	equ 64
+	hw_sprites_xc:		equ hw_sprites_y + hw_sprites_y_len
+	hw_sprites_xc_len:	equ 128
+	
+	UsrRAMStart:		equ hw_sprites_xc + hw_sprites_xc_len
 	
 		org 0000h
 		
@@ -486,6 +491,34 @@
 	number_print_output_loop_done:
 		ret
 
+    ;==============================================================
+    ; Sets the sprites' positions/attributes
+    ;==============================================================	
+	UpdateSprites:
+		;vdp set addr (Y table)
+		xor	a
+		out	($bf), a
+		ld	a, $7f
+		out	($bf), a
+		
+		; Outputs Y table
+		ld	hl, hw_sprites_y
+		ld	bc, $40BE	; 64 bytes to $be
+		otir			; Output table
+
+		;vdp set addr (X/Tile table)
+		ld	a, $80
+		out	($bf), a
+		ld	a, $7f
+		out	($bf), a
+		
+		; Outputs XA table
+		ld	hl, hw_sprites_xc
+		ld	bc, $80BE	; 128 bytes to $be
+		otir			; Output table
+		ret
+	
+	
 	</textarea>
 	
 	<textarea id="include-data.asm">
