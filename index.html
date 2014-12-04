@@ -174,7 +174,13 @@
 	VDPControl:	equ $bf
 	VDPData: 	equ $be
 	VRAMWrite:	equ $4000
-	CRAMWrite:	equ $c000
+	CRAMWrite:	equ $c000	
+	RAMStart: 	equ $c000
+	
+	;==============================================================
+	; RAM defines
+	;==============================================================
+	UsrRAMStart: equ RAMStart + 0
 	
 		org 0000h
 		

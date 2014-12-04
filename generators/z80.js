@@ -106,10 +106,10 @@ Blockly.Z80.init = function() {
 
   var defvars = [];
   var variables = Blockly.Variables.allVariables();
-  var ramAddr = 0xC000; // SMS RAM starts at $C000
+  var ramAddr = 0x00;
   for (var x = 0; x < variables.length; x++) {
     defvars[x] = Blockly.Z80.variableDB_.getName(variables[x], Blockly.Variables.NAME_TYPE) + 
-		':\tequ $' + ramAddr.toString(16).toUpperCase() +
+		':\tequ UsrRAMStart + $' + ramAddr.toString(16).toUpperCase() +
 		'\t; ' + variables[x];
 	ramAddr += 2;
   }
