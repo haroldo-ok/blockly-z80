@@ -25,13 +25,36 @@
 		border-radius: 0.2cm;
 	}
 
+	a:hover {
+		background: #3D9;
+		color: #FF0;
+	}
+	
+	a.button-disabled,
+	a.button-disabled:hover {
+		background: #888;
+		color: #DDD;
+		
+		border-color: #BBB;
+		border-right-color: #555;
+		border-bottom-color: #555;
+	}
+	
+	h1, p {
+		text-align: center;
+	}
 </style>
 
 </head>
 
 <body>
+	<h1>Blockly Z80 demos</h1>
 
 	<a href="demos/commands/index.html">Commands demo</a>
+	<p>Basic demontration of the available Blockly-Z80 commands</p>
+
+	<a href="#" class="button-disabled">Game designer demo</a>
+	<p>Coming soon...</p>
 	
 </body>
 
