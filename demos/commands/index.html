@@ -59,7 +59,7 @@
 
 <body>
 	<script>
-		$.when.apply(this, ['data.asm', 'sms.asm'].map(function(fileName){
+		$.when.apply(this, ['data.asm', 'sms.asm', 'coleco.asm'].map(function(fileName){
 			return $.ajax(fileName, { dataType: 'text' })
 				.then(function(text){
 					this.returnInfo = {
