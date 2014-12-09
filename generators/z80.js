@@ -135,7 +135,7 @@ Blockly.Z80.finish = function(code) {
   }
   
   var generatedSource =
-		'\tinclude "sms.asm"\n\n' +
+		'\tinclude "hardware.asm"\n\n' +
 		definitions.join('\n\n') + 
 		'\n\nMAIN:\n' + code + 
 		'\n\nprogram_done:\tjr program_done' +

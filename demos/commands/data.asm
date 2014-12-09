@@ -12,6 +12,12 @@ VDPInitData:
 	db $04,$80,$00,$81,$ff,$82,$ff,$85,$ff,$86,$ff,$87,$00,$88,$00,$89,$ff,$8a
 VDPInitDataEnd:
 
+; VDP initialisation data
+VDPInitDataSG1000:
+;	db $04,$80,$00,$81,$ff,$82,$ff,$85,$ff,$86,$ff,$87
+	db $00,$80,$40,$81,$0F,$82,$00,$83,$01,$84,$01,$85,$04,$86,$08,$87;
+VDPInitDataSG1000End:
+
 FontData:
 	db 00h,00h,00h,00h,00h,00h,00h,00h,18h,18h,18h,18h,18h,00h,18h,00h
 	db 6ch,6ch,6ch,00h,00h,00h,00h,00h,36h,36h,7fh,36h,7fh,36h,36h,00h

@@ -59,7 +59,7 @@
 
 <body>
 	<script>
-		$.when.apply(this, ['data.asm', 'sms.asm', 'coleco.asm'].map(function(fileName){
+		$.when.apply(this, ['data.asm', 'sms.asm', 'coleco.asm', 'sg-1000.asm'].map(function(fileName){
 			return $.ajax(fileName, { dataType: 'text' })
 				.then(function(text){
 					this.returnInfo = {
@@ -94,6 +94,13 @@
 			window.BitZ80 = BitZ80;
 			
 			BitZ80.ASM.fExternalLoader = function(fileName) {
+				if (fileName == 'hardware.asm') {
+					var mapping = {
+						'sms': 'sms.asm',
+						'sg': 'sg-1000.asm'
+					};
+					fileName = mapping[$('#hardware-type').val()];
+				}				
 				return assemblyIncludes[fileName];
 			}
 			
@@ -169,7 +176,8 @@
 				document.getElementById('save-rom').addEventListener('click', function(){
 					var bytes = new Uint8Array(BitZ80.code)
 					var blob = new Blob([bytes], {type: "application/octet-stream"});
-					saveAs(blob, 'bitz80.sms');
+					var ext = $('#hardware-type').val();
+					saveAs(blob, 'bitz80.' + ext);
 				});
 			} else {
 				// Still waiting for dependencies to load
@@ -182,6 +190,10 @@
 	</div>
 	<div id="output-container">
 		<div id="button-container">
+			<select id="hardware-type">
+				<option value="sms" selected="selected">Sega Master System</option>
+				<option value="sg">SG-1000</option>
+			</select>
 			<button id="save-rom">Save ROM</button>
 		</div>
 		<textarea id="blockly-output"></textarea>
