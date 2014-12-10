@@ -103,3 +103,52 @@ dosign:
 		sub     d
 		ld      d,a
 		ret
+
+		
+;====================================
+; HL == DE
+;====================================
+
+CompareHLeqDE:
+	; Check lower byte
+	ld a, l
+	cp e
+	jr nz, SetHL_False
+	
+	; Check upper byte
+	ld a, h
+	cp d
+	jr nz, SetHL_False
+
+	ld hl,1
+	ret
+
+	
+;====================================
+; HL != DE
+;====================================
+
+CompareHLneqDE:
+	; Compares for equality, then negates
+	call CompareHLeqDE
+	jr BooleanNotHL
+
+
+;====================================
+; HL = !HL
+;====================================
+
+BooleanNotHL:
+	ld a, h
+	or l
+	jr nz, SetHL_False	; If it's non-zero, set HL to false
+	ld hl, 1			; If it's zero, set HL to true
+	ret
+
+;====================================
+; HL = false
+;====================================
+
+SetHL_False:
+	ld hl, 0
+	ret

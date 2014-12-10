@@ -52,19 +52,24 @@ Blockly.Z80['controls_if'] = function(block) {
 Blockly.Z80['logic_compare'] = function(block) {
   // Comparison operator.
   var OPERATORS = {
-    'EQ': '==',
-    'NEQ': '!=',
+    'EQ': 'CompareHLeqDE',
+    'NEQ': 'CompareHLneqDE',
     'LT': '<',
     'LTE': '<=',
     'GT': '>',
     'GTE': '>='
   };
   var operator = OPERATORS[block.getFieldValue('OP')];
-  var order = (operator == '==' || operator == '!=') ?
-      Blockly.Z80.ORDER_EQUALITY : Blockly.Z80.ORDER_RELATIONAL;
-  var argument0 = Blockly.Z80.valueToCode(block, 'A', order) || '0';
-  var argument1 = Blockly.Z80.valueToCode(block, 'B', order) || '0';
-  var code = argument0 + ' ' + operator + ' ' + argument1;
+  var order = Blockly.Z80.ORDER_ATOMIC;
+  var argument0 = Blockly.Z80.valueToCode(block, 'A', order) || 'ld hl, 0\n';
+  var argument1 = Blockly.Z80.valueToCode(block, 'B', order) || 'ld hl, 0\n';
+  
+  var code = argument0 +
+		'push hl\n' + // Saves first argument
+		argument1 +
+		'pop de\n' + // Restores first argument into DE
+		'call ' + operator + '\n'; 
+		
   return [code, order];
 };
 
