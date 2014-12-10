@@ -147,8 +147,7 @@
 			if (window['Blockly'] && window['BitZ80'] && window['assemblyIncludes']) {
 				console.debug('Everything is ready');
 				
-				// Capture Blockly's change event.
-				Blockly.addChangeListener(function(){
+				BitZ80.compile = function(){
 					var code = Blockly.Z80.workspaceToCode();
 					document.getElementById('blockly-output').value = code;
 					
@@ -170,7 +169,13 @@
 					} catch (e) {
 						bzOut.value = e;
 					}
-				});
+				}
+
+				// Capture Blockly's change event.
+				Blockly.addChangeListener(BitZ80.compile);
+				
+				// Capture 'Target Hardware' select
+				$('#hardware-type').change(BitZ80.compile);
 				
 				// Capture 'Save ROM' button click
 				document.getElementById('save-rom').addEventListener('click', function(){

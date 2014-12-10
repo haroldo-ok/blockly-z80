@@ -76,8 +76,8 @@ ClearVRAM_Loop:
 	;==============================================================
 	; Load palette
 	;==============================================================
-	; 1. Set VRAM write address to CRAM (palette) address $800
-	ld hl,$0800 | CRAMWrite
+	; 1. Set VRAM write address to CRAM (palette) address 0
+	ld hl,$0000 | CRAMWrite
 	call SetVDPAddress
 	; 2. Output colour data
 	ld hl,PaletteData
@@ -87,13 +87,27 @@ ClearVRAM_Loop:
 	;==============================================================
 	; Load tiles (font)
 	;==============================================================
-	; 1. Set VRAM write address to tile index 0
-	ld hl,$0000 | VRAMWrite
+	; 1. Set VRAM write address to tile index $800
+	ld hl,$0800 | VRAMWrite
 	call SetVDPAddress
 	; 2. Output tile data
 	ld hl,FontData              ; Location of tile data
 	ld bc,FontDataEnd-FontData  ; Counter for number of bytes to write
 	call Copy1bppToVDP
+	
+	; Set up color tables
+	ld hl,$4000
+	call SetVDPAddress
+	
+	ld c, $40;
+ColorTableLoop:
+	ld a,$a6	;8c c6
+	out (VDPData),a
+	dec c
+	ld a, c
+	or a
+	jr nz,ColorTableLoop
+	
 
 	;==============================================================
 	; Turn screen on
@@ -116,7 +130,7 @@ ClearVRAM_Loop:
 
 ; call main program
 	; Set VRAM write address to tilemap index 0
-	ld hl,$3800 | VRAMWrite
+	ld hl,$3C00 | VRAMWrite
 	call SetVDPAddress
 
 	jp MAIN
@@ -281,8 +295,6 @@ text_print:
 	or a
 	jr z, text_print_end
 	sub 32
-	out (VDPData),a
-	xor a
 	out (VDPData),a
 	inc hl
 	jr text_print
