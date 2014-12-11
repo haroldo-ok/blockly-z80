@@ -34,8 +34,7 @@ Blockly.Z80['controls_repeat'] = function(block) {
 	var repeats = Number(block.getFieldValue('TIMES'));
 	var branch = Blockly.Z80.statementToCode(block, 'DO');
   
-	var code = '\t; Repeat\n' +
-		'\tld bc, ' + repeats + '\n' +
+	var code = 'ld bc, ' + repeats + '\n' +
 		Blockly.Z80['controls_repeat'].generateBody(branch);
 
 	return code;
@@ -61,26 +60,17 @@ Blockly.Z80['controls_repeat'].generateBody = function(branch) {
 };
 
 Blockly.Z80['controls_repeat_ext'] = function(block) {
-  // Repeat n times (external number).
-  var repeats = Blockly.Z80.valueToCode(block, 'TIMES',
-      Blockly.Z80.ORDER_ASSIGNMENT) || '0';
-  var branch = Blockly.Z80.statementToCode(block, 'DO');
-  branch = Blockly.Z80.addLoopTrap(branch, block.id);
-  var code = '';
-  var loopVar = Blockly.Z80.variableDB_.getDistinctName(
-      'count', Blockly.Variables.NAME_TYPE);
-  var endVar = repeats;
-  if (!repeats.match(/^\w+$/) && !Blockly.isNumber(repeats)) {
-    var endVar = Blockly.Z80.variableDB_.getDistinctName(
-        'repeat_end', Blockly.Variables.NAME_TYPE);
-    code += 'var ' + endVar + ' = ' + repeats + ';\n';
-  }
-  code += 'for (var ' + loopVar + ' = 0; ' +
-      loopVar + ' < ' + endVar + '; ' +
-      loopVar + '++) {\n' +
-      branch + '}\n';
+	// Repeat n times (external number).
+	var repeats = Blockly.Z80.valueToCode(block, 'TIMES',
+		Blockly.Z80.ORDER_ASSIGNMENT) || 'ld hl, 0\n';
+	var branch = Blockly.Z80.statementToCode(block, 'DO');
 
-  return code;
+	var code = [repeats.trim(),
+		'ld b, h',
+		'ld c, l',
+		Blockly.Z80['controls_repeat'].generateBody(branch).trim()];
+
+	return code.join('\n') + '\n';
 };
 
 Blockly.Z80['controls_whileUntil'] = function(block) {
