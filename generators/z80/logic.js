@@ -97,18 +97,17 @@ Blockly.Z80['logic_compare'] = function(block) {
 
 Blockly.Z80['logic_operation'] = function(block) {
   // Operations 'and', 'or'.
-  var operator = (block.getFieldValue('OP') == 'AND') ? '&&' : '||';
-  var order = (operator == '&&') ? Blockly.Z80.ORDER_LOGICAL_AND :
-      Blockly.Z80.ORDER_LOGICAL_OR;
+  var operator = (block.getFieldValue('OP') == 'AND') ? 'and' : 'or';
+  var order = Blockly.Z80.ORDER_ATOMIC;
   var argument0 = Blockly.Z80.valueToCode(block, 'A', order);
   var argument1 = Blockly.Z80.valueToCode(block, 'B', order);
   if (!argument0 && !argument1) {
     // If there are no arguments, then the return value is false.
-    argument0 = 'false';
-    argument1 = 'false';
+    argument0 = 'ld hl, 0\n';
+    argument1 = 'ld hl, 0\n';
   } else {
     // Single missing arguments have no effect on the return value.
-    var defaultArgument = (operator == '&&') ? 'true' : 'false';
+    var defaultArgument = (operator == 'and') ? 'ld hl, 1\n' : 'ld hl, 0\n';
     if (!argument0) {
       argument0 = defaultArgument;
     }
@@ -116,22 +115,48 @@ Blockly.Z80['logic_operation'] = function(block) {
       argument1 = defaultArgument;
     }
   }
-  var code = argument0 + ' ' + operator + ' ' + argument1;
+  
+  var ifYes = Blockly.Z80.variableDB_.getDistinctName(operator + '_true_', Blockly.Variables.NAME_TYPE);
+  var ifNot = Blockly.Z80.variableDB_.getDistinctName(operator + '_false_', Blockly.Variables.NAME_TYPE);
+  var ifDone = Blockly.Z80.variableDB_.getDistinctName(operator + '_done_', Blockly.Variables.NAME_TYPE);
+  
+  // Build the actual code; short-circuit boolean evaluation is used.
+  if (operator == 'and') {
+	var code = argument0 +
+		'ld a, h\n' +
+		'or l\n' +
+		'jr nz, ' + ifYes + '\n' +
+		'jp ' + ifDone + '\n' +	// If HL is zero, skip the second argument
+		ifYes + ':\n' +	// If HL is nonzero, the second argument will determine the final result
+		argument1 +
+		ifDone + ':\n';
+  } else {
+	var code = argument0 +
+		'ld a, h\n' +
+		'or l\n' +
+		'jr z, ' + ifNot + '\n' +
+		'jp ' + ifDone + '\n' +	// If HL is nonzero, skip the second argument
+		ifNot + ':\n' +	// If HL is zero, the second argument will determine the final result
+		argument1 +
+		ifDone + ':\n';
+  }
+  
   return [code, order];
 };
 
 Blockly.Z80['logic_negate'] = function(block) {
   // Negation.
-  var order = Blockly.Z80.ORDER_LOGICAL_NOT;
+  var order = Blockly.Z80.ORDER_ATOMIC;
   var argument0 = Blockly.Z80.valueToCode(block, 'BOOL', order) ||
-      'true';
-  var code = '!' + argument0;
+      'ld hl, 1\n';
+  var code = argument0 + 'call BooleanNotHL\n';
   return [code, order];
 };
 
 Blockly.Z80['logic_boolean'] = function(block) {
   // Boolean values true and false.
-  var code = (block.getFieldValue('BOOL') == 'TRUE') ? 'true' : 'false';
+  var value = (block.getFieldValue('BOOL') == 'TRUE') ? '1' : '0';
+  var code = 'ld hl, ' + value + '\n';
   return [code, Blockly.Z80.ORDER_ATOMIC];
 };
 
@@ -142,12 +167,26 @@ Blockly.Z80['logic_null'] = function(block) {
 
 Blockly.Z80['logic_ternary'] = function(block) {
   // Ternary operator.
-  var value_if = Blockly.Z80.valueToCode(block, 'IF',
-      Blockly.Z80.ORDER_CONDITIONAL) || 'false';
-  var value_then = Blockly.Z80.valueToCode(block, 'THEN',
-      Blockly.Z80.ORDER_CONDITIONAL) || 'null';
-  var value_else = Blockly.Z80.valueToCode(block, 'ELSE',
-      Blockly.Z80.ORDER_CONDITIONAL) || 'null';
-  var code = value_if + ' ? ' + value_then + ' : ' + value_else;
-  return [code, Blockly.Z80.ORDER_CONDITIONAL];
+  var order = Blockly.Z80.ORDER_ATOMIC;
+  var value_if = Blockly.Z80.valueToCode(block, 'IF', order) || 'ld hl, 0\n';
+  var value_then = Blockly.Z80.valueToCode(block, 'THEN', order) || 'ld hl, 0\n';
+  var value_else = Blockly.Z80.valueToCode(block, 'ELSE', order) || 'ld hl, 0\n';
+  
+  var ifYes = Blockly.Z80.variableDB_.getDistinctName('ternary_yes_', Blockly.Variables.NAME_TYPE);
+  var ifNot = Blockly.Z80.variableDB_.getDistinctName('ternary_not_', Blockly.Variables.NAME_TYPE);
+  var ifDone = Blockly.Z80.variableDB_.getDistinctName('ternary_done_', Blockly.Variables.NAME_TYPE);
+  
+  var code = [value_if.trim(),
+		'ld a, h',
+		'or l',
+		'jr nz, ' + ifYes,
+		'jp ' + ifNot,
+		ifYes + ':',
+		value_then.trim(), 
+		'jp ' + ifDone,
+		ifNot + ':',
+		value_else.trim(),
+		ifDone + ':'].join('\n') + '\n';  
+  
+  return [code, Blockly.Z80.ORDER_ATOMIC];
 };
