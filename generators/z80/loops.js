@@ -33,20 +33,8 @@ Blockly.Z80['controls_repeat'] = function(block) {
 	// Repeat n times (internal number).	
 	var repeats = Number(block.getFieldValue('TIMES'));
 	var branch = Blockly.Z80.statementToCode(block, 'DO');
-//	branch = Blockly.Z80.addLoopTrap(branch, block.id);
 	var loopVar = Blockly.Z80.variableDB_.getDistinctName('rpt_', Blockly.Variables.NAME_TYPE);
   
-  /*
-  var loopVar = Blockly.Z80.variableDB_.getDistinctName(
-      'count', Blockly.Variables.NAME_TYPE);
-	*/
-
-/*	
-  var code = 'for (var ' + loopVar + ' = 0; ' +
-      loopVar + ' < ' + repeats + '; ' +
-      loopVar + '++) {\n' +
-      branch + '}\n';
-*/
 	var code = '\t; Repeat\n' +
 		'\tld bc, ' + repeats + '\n' +
 		loopVar + ':\n' +
