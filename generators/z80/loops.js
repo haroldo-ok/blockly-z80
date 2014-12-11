@@ -33,22 +33,31 @@ Blockly.Z80['controls_repeat'] = function(block) {
 	// Repeat n times (internal number).	
 	var repeats = Number(block.getFieldValue('TIMES'));
 	var branch = Blockly.Z80.statementToCode(block, 'DO');
-	var loopVar = Blockly.Z80.variableDB_.getDistinctName('rpt_', Blockly.Variables.NAME_TYPE);
   
 	var code = '\t; Repeat\n' +
 		'\tld bc, ' + repeats + '\n' +
-		loopVar + ':\n' +
-		'\tpush bc\n\n' +
-		branch + '\n' +
-		'\tpop bc\n' +
-		'\tdec bc\n' +
-		'\tld a, b\n' +
-		'\tor c\n' +
-		'\tjr z, end_' + loopVar + '\n' +
-		'\tjp ' + loopVar + '\n' +
-		'end_' + loopVar + ':\t; End repeat\n';
+		Blockly.Z80['controls_repeat'].generateBody(branch);
 
 	return code;
+};
+
+Blockly.Z80['controls_repeat'].generateBody = function(branch) {
+	var loopLabel = Blockly.Z80.variableDB_.getDistinctName('rpt_loop_', Blockly.Variables.NAME_TYPE);
+	var endLoopLabel = Blockly.Z80.variableDB_.getDistinctName('rpt_loop_end_', Blockly.Variables.NAME_TYPE);
+	
+	var code = [
+		loopLabel + ':',
+		'push bc\n',
+		branch,
+		'pop bc',
+		'dec bc',
+		'ld a, b',
+		'or c',
+		'jr z, ' + endLoopLabel,
+		'jp ' + loopLabel,
+		endLoopLabel + ':'];
+
+	return code.join('\n') + '\n';
 };
 
 Blockly.Z80['controls_repeat_ext'] = function(block) {
