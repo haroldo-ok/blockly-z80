@@ -145,10 +145,75 @@ BooleanNotHL:
 	ld hl, 1			; If it's zero, set HL to true
 	ret
 
+	
+;====================================
+; DE < HL
+;====================================
+
+CompareDEltHL:
+	call CompareDE_HL
+	jr nc, SetHL_False	; If no carry, DE >= HL
+	ld hl, 1			; If carry, DE < HL
+	ret
+
+	
+;====================================
+; DE <= HL
+;====================================
+
+CompareDElteHL:
+	; Compares for '>', then negates
+	call CompareDEgtHL
+	jr BooleanNotHL
+
+	
+;====================================
+; DE > HL
+;====================================
+
+CompareDEgtHL:
+	; Just swaps the arguments, then compares for '<'
+	ex de,hl
+	jr CompareDEltHL
+
+
+;====================================
+; DE > HL
+;====================================
+
+CompareDEgteHL:
+	; Compares for '<', then negates
+	call CompareDEltHL
+	jr BooleanNotHL
+
+	
 ;====================================
 ; HL = false
 ;====================================
 
 SetHL_False:
 	ld hl, 0
+	ret
+
+
+;================================================
+; Compares de with hl
+; Taken from Z88DK
+; signed compare of DE and HL
+;   carry is sign of difference 
+;          [set => DE < HL]
+;   zero is zero/non-zero
+;================================================
+
+CompareDE_HL:
+	ld	a, h
+	add	a, $80
+	ld	b,a
+	ld	a,d
+	add	a, $80
+	cp	b
+	jp	nz, CompareDE_HL_done
+	ld	a, e
+	cp	l
+CompareDE_HL_done:
 	ret

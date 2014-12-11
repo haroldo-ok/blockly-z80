@@ -54,10 +54,10 @@ Blockly.Z80['logic_compare'] = function(block) {
   var OPERATORS = {
     'EQ': 'CompareHLeqDE',
     'NEQ': 'CompareHLneqDE',
-    'LT': '<',
-    'LTE': '<=',
-    'GT': '>',
-    'GTE': '>='
+    'LT': 'CompareDEltHL',
+    'LTE': 'CompareDElteHL',
+    'GT': 'CompareDEgtHL',
+    'GTE': 'CompareDEgteHL'
   };
   var operator = OPERATORS[block.getFieldValue('OP')];
   var order = Blockly.Z80.ORDER_ATOMIC;
