@@ -31,22 +31,44 @@ goog.require('Blockly.Z80');
 
 Blockly.Z80['controls_if'] = function(block) {
   // If/elseif/else condition.
+  var setHlFalse = 'ld hl, 0\n';
+
   var n = 0;
   var argument = Blockly.Z80.valueToCode(block, 'IF' + n,
-      Blockly.Z80.ORDER_NONE) || 'false';
+      Blockly.Z80.ORDER_NONE) || setHlFalse;
   var branch = Blockly.Z80.statementToCode(block, 'DO' + n);
-  var code = 'if (' + argument + ') {\n' + branch + '}';
+  
+  var endIf = Blockly.Z80.variableDB_.getDistinctName('end_if_', Blockly.Variables.NAME_TYPE);
+  
+  function generateIf() {
+	  var ifYes = Blockly.Z80.variableDB_.getDistinctName('if_yes_', Blockly.Variables.NAME_TYPE);
+	  var ifNot = Blockly.Z80.variableDB_.getDistinctName('if_not_', Blockly.Variables.NAME_TYPE);
+
+	  return argument +
+			'ld a, h\n' +
+			'or l\n' +
+			'jr nz,' + ifYes + '\n' +
+			'jp ' + ifNot + '\n' +
+			ifYes + ':\n' +
+			branch +
+			'jp ' + endIf + '\n' +
+			ifNot + ':\n';
+  }
+
+  var code = generateIf();
+  
   for (n = 1; n <= block.elseifCount_; n++) {
     argument = Blockly.Z80.valueToCode(block, 'IF' + n,
-        Blockly.Z80.ORDER_NONE) || 'false';
+        Blockly.Z80.ORDER_NONE) || setHlFalse;
     branch = Blockly.Z80.statementToCode(block, 'DO' + n);
-    code += ' else if (' + argument + ') {\n' + branch + '}';
+    code += generateIf();
   }
   if (block.elseCount_) {
     branch = Blockly.Z80.statementToCode(block, 'ELSE');
-    code += ' else {\n' + branch + '}';
+    code += branch;
   }
-  return code + '\n';
+  
+  return code + endIf + ':\n';
 };
 
 Blockly.Z80['logic_compare'] = function(block) {
