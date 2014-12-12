@@ -248,6 +248,10 @@ Blockly.Z80.scrub_ = function(block, code) {
  * This is a very simple peephole optimizer for the generated ASM code
  */
 Blockly.Z80.optimizeSource_ = function(code) {
+
+	// Eliminates extra spaces at beginning and end
+	code = code.split('\n').map(function(s){ return s.trim() }).join('\n');
+	
 	/*
 		-- Turns --
 		ld hl, 12
