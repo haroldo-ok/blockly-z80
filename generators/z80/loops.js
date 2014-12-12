@@ -54,7 +54,8 @@ Blockly.Z80['controls_repeat'].generateBody = function(branch) {
 		'or c',
 		'jr z, ' + endLoopLabel,
 		'jp ' + loopLabel,
-		endLoopLabel + ':'];
+		endLoopLabel + ':'
+	];
 
 	return code.join('\n') + '\n';
 };
@@ -65,26 +66,41 @@ Blockly.Z80['controls_repeat_ext'] = function(block) {
 		Blockly.Z80.ORDER_ASSIGNMENT) || 'ld hl, 0\n';
 	var branch = Blockly.Z80.statementToCode(block, 'DO');
 
-	var code = [repeats.trim(),
+	var code = [
+		repeats.trim(),
 		'ld b, h',
 		'ld c, l',
-		Blockly.Z80['controls_repeat'].generateBody(branch).trim()];
+		Blockly.Z80['controls_repeat'].generateBody(branch).trim()
+	];
 
 	return code.join('\n') + '\n';
 };
 
 Blockly.Z80['controls_whileUntil'] = function(block) {
-  // Do while/until loop.
-  var until = block.getFieldValue('MODE') == 'UNTIL';
-  var argument0 = Blockly.Z80.valueToCode(block, 'BOOL',
-      until ? Blockly.Z80.ORDER_LOGICAL_NOT :
-      Blockly.Z80.ORDER_NONE) || 'false';
-  var branch = Blockly.Z80.statementToCode(block, 'DO');
-  branch = Blockly.Z80.addLoopTrap(branch, block.id);
-  if (until) {
-    argument0 = '!' + argument0;
-  }
-  return 'while (' + argument0 + ') {\n' + branch + '}\n';
+	// Do while/until loop.
+	var until = block.getFieldValue('MODE') == 'UNTIL';
+	var argument0 = Blockly.Z80.valueToCode(block, 'BOOL',
+		Blockly.Z80.ORDER_ATOMIC) || 'ld hl, 0\n';
+	var branch = Blockly.Z80.statementToCode(block, 'DO');
+
+	var whileLoop = Blockly.Z80.variableDB_.getDistinctName('while_loop_', Blockly.Variables.NAME_TYPE);
+	var whileStay = Blockly.Z80.variableDB_.getDistinctName('while_stay_', Blockly.Variables.NAME_TYPE);
+	var whileDone = Blockly.Z80.variableDB_.getDistinctName('while_done_', Blockly.Variables.NAME_TYPE);
+	
+	var code = [
+		whileLoop + ':',
+		argument0.trim(),
+		'ld a, h',
+		'or l',
+		'jr ' + (until ? 'z, ' : 'nz, ') + whileStay,
+		'jp ' + whileDone,
+		whileStay + ':\n',
+		branch,
+		'jp ' + whileLoop,
+		whileDone + ':'
+	];
+
+	return code.join('\n') + '\n';
 };
 
 Blockly.Z80['controls_for'] = function(block) {
