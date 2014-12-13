@@ -279,5 +279,24 @@ Blockly.Z80.optimizeSource_ = function(code) {
 	*/
 	code = code.replace(/^ld de, ([\(\w\)]+)\s+ld hl, ([\(\w\)]+)\s+ex de, hl$/mg, 'ld hl, $1\nld de, $2');
 	
+	/*
+		-- Turns --
+		ld de, (Value)
+		ld hl, 2
+		add hl, de
+		push hl
+		ld hl, 1
+		pop de
+		call Something
+		-- Into --
+		ld de, (Value)
+		ld hl, 2
+		add hl, de
+		ex de, hl
+		ld hl, 1
+		call Something
+	*/
+	code = code.replace(/^push hl\s+ld hl, ([\(\w\)]+)\s+pop de$/mg, 'ex de, hl\nld hl, 1');
+	
 	return code
 };

@@ -78,4 +78,21 @@
 		'sbc hl, de'
 	], "Simple subtraction");
 
+	assertOptimizer([
+		'ld de, (Value)',
+		'ld hl, 2',
+		'add hl, de',
+		'push hl',
+		'ld hl, 1',
+		'pop de',
+		'call Something'
+	], [
+		'ld de, (Value)',
+		'ld hl, 2',
+		'add hl, de',
+		'ex de, hl',
+		'ld hl, 1',
+		'call Something'
+	], "HL expression followed by constant");
+
 })();
