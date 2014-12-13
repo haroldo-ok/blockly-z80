@@ -95,4 +95,12 @@
 		'call Something'
 	], "HL expression followed by constant");
 
+	assertOptimizer([
+		'ex de, hl',
+		'ld hl, 1',
+		'ex de, hl'
+	], [
+		'ld de, 1'
+	], "Double 'EX DE, HL'");
+
 })();
