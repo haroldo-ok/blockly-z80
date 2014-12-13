@@ -55,4 +55,14 @@
 		'ld hl, 1'
 	], "Optimize loading of variable followed by constant");
 
+	assertOptimizer([
+		'ld hl, (item)',
+		'push hl',
+		'ld hl, (thing)',
+		'pop de'
+	], [
+		'ld de, (item)',
+		'ld hl, (thing)'
+	], "Optimize loading of two variables");
+
 })();
