@@ -43,7 +43,7 @@
 		'or a',
 		'ex de, hl',
 		'sbc hl, de'
-	], "Optimizable code with extra spaces");
+	], "Tolerate code with extra spaces");
 	
 	assertOptimizer([
 		'ld hl, (Value)',
@@ -53,7 +53,7 @@
 	], [
 		'ld de, (Value)',
 		'ld hl, 1'
-	], "Optimize loading of variable followed by constant");
+	], "Loading of variable followed by constant");
 
 	assertOptimizer([
 		'ld hl, (item)',
@@ -63,6 +63,19 @@
 	], [
 		'ld de, (item)',
 		'ld hl, (thing)'
-	], "Optimize loading of two variables");
+	], "Loading of two variables");
+
+	assertOptimizer([
+		'ld de, 5',
+		'ld hl, 2',
+		'ex de, hl',
+		'or a',
+		'sbc hl, de'
+	], [
+		'ld hl, 5',
+		'ld de, 2',
+		'or a',
+		'sbc hl, de'
+	], "Simple subtraction");
 
 })();

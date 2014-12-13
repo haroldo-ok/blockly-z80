@@ -42,7 +42,7 @@ Blockly.Z80['math_arithmetic'] = function(block) {
   // Basic arithmetic operators, and power.
   var OPERATORS = {
     'ADD': ['add hl, de', Blockly.Z80.ORDER_ATOMIC],
-    'MINUS': ['or a\nex de, hl\nsbc hl, de', Blockly.Z80.ORDER_ATOMIC],
+    'MINUS': ['ex de, hl\nor a\nsbc hl, de', Blockly.Z80.ORDER_ATOMIC],
     'MULTIPLY': ['call Multiply', Blockly.Z80.ORDER_ATOMIC],
     'DIVIDE': ['call Divide', Blockly.Z80.ORDER_ATOMIC],
     'POWER': [null, Blockly.Z80.ORDER_COMMA]  // Handle power separately.
