@@ -249,7 +249,7 @@ Blockly.Z80.scrub_ = function(block, code) {
  */
 Blockly.Z80.optimizeSource_ = function(code) {
 
-	// Eliminates extra spaces at beginning and end
+	// Eliminates extra spaces at beginning and end of each line
 	code = code.split('\n').map(function(s){ return s.trim() }).join('\n');
 	
 	/*
@@ -262,7 +262,7 @@ Blockly.Z80.optimizeSource_ = function(code) {
 		ld de, 12
 		ld hl, 34
 	*/
-	code = code.replace(/^ld hl, (\w+)\s+push hl\s+ld hl, (\w+)\s+pop de\n/mg, 'ld de, $1\nld hl, $2\n');
+	code = code.replace(/^ld hl, ([\(\w\)]+)\s+push hl\s+ld hl, (\w+)\s+pop de$/mg, 'ld de, $1\nld hl, $2');
 	
 	return code
 };

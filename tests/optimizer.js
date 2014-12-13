@@ -45,5 +45,14 @@
 		'sbc hl, de'
 	], "Optimizable code with extra spaces");
 	
+	assertOptimizer([
+		'ld hl, (Value)',
+		'push hl',
+		'ld hl, 1',
+		'pop de'
+	], [
+		'ld de, (Value)',
+		'ld hl, 1'
+	], "Optimize loading of variable followed by constant");
 
 })();
