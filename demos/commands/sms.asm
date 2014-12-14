@@ -235,6 +235,32 @@ number_print_output_loop_done:
 	ret
 
 ;==============================================================
+; Move an sprite to a certain (x,y) position
+; Done only in RAM; needs UpdateSprites to actually update.
+; HL = Sprite number
+; E  = Sprite X coordinate
+; C  = Sprite Y coordinate
+;==============================================================	
+MoveSpriteXY:
+	; X coordinate
+	push hl		; Saves a copy of the sprite number	
+	add hl, hl	; Each record is two bytes long
+	ld a, e
+	ld de, hw_sprites_xc
+	add hl, de
+	ld (hl), a
+	
+	; Y coordinate
+	pop hl		; Restores the copy of the sprite number
+	ld de, hw_sprites_y
+	add hl, de
+	ld (hl), c
+	
+	ret
+	
+
+
+;==============================================================
 ; Sets the sprites' positions/attributes
 ;==============================================================	
 UpdateSprites:
@@ -260,3 +286,32 @@ UpdateSprites:
 	ld	bc, $80BE	; 128 bytes to $be
 	otir			; Output table
 	ret
+
+
+;==============================================================
+; V Counter reader
+; Waits for 2 consecutive identical values (to avoid garbage)
+; Returns in a *and* b
+;==============================================================
+GetVCount:
+    in a,($7e)  ; get VCount
+GetVCount_loop:	
+    ld b,a      ; store it
+    in a,($7e)  ; and again
+    cp b        ; Is it the same?
+    jp nz,GetVCount_loop ; If not, repeat
+    ret         ; If so, return it in a (and b)
+
+;==============================================================
+; Waits for vblank
+;==============================================================
+WaitForVBlank:
+    push bc
+    push af
+WaitForVBlank_loop:
+        call GetVCount
+        cp 192
+        jp nz,WaitForVBlank_loop
+    pop af
+    pop bc
+    ret
