@@ -4,6 +4,7 @@ goog.provide('Blockly.Blocks.hardware');
 
 goog.require('Blockly.Blocks');
 
+
 // https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#9if9fy
 Blockly.Blocks['hardware_update_sprites'] = {
   init: function() {
@@ -16,6 +17,7 @@ Blockly.Blocks['hardware_update_sprites'] = {
     this.setTooltip('Update the sprites; this should be called once per frame');
   }
 };
+
 
 // https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#u969zn
 Blockly.Blocks['hardware_sprite_move'] = {
@@ -38,6 +40,26 @@ Blockly.Blocks['hardware_sprite_move'] = {
   }
 };
 
+
+// https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#e7x9r6
+Blockly.Blocks['hardware_sprite_tile'] = {
+  init: function() {
+    this.setHelpUrl('http://www.example.com/');
+    this.setColour(65);
+    this.appendValueInput("NUMBER")
+        .setCheck("Number")
+        .appendField("Set tile of sprite #");
+    this.appendValueInput("TILE_NUMBER")
+        .setCheck("Number")
+        .appendField("to");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('');
+  }
+};
+
+
 Blockly.Blocks['hardware_wait_vblank'] = {
   init: function() {
     this.setHelpUrl('http://www.example.com/');
@@ -49,6 +71,7 @@ Blockly.Blocks['hardware_wait_vblank'] = {
     this.setTooltip('Waits for VBlank; this should be called once per frame');
   }
 };
+
 
 // https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#mbenfx
 Blockly.Blocks['hardware_read_joypads'] = {
@@ -62,6 +85,7 @@ Blockly.Blocks['hardware_read_joypads'] = {
     this.setTooltip('Reads the joypads; this should be called once per frame');
   }
 };
+
 
 // https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#yksd9i
 Blockly.Blocks['hardware_read_joypad'] = {

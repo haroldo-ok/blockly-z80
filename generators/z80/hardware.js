@@ -13,7 +13,7 @@ Blockly.Z80['hardware_sprite_move'] = function(block) {
 	var value_number = Blockly.Z80.valueToCode(block, 'NUMBER', Blockly.Z80.ORDER_ATOMIC) || 'ld hl, 0\n';
 	var value_x = Blockly.Z80.valueToCode(block, 'X', Blockly.Z80.ORDER_ATOMIC) || 'ld hl, 0\n';
 	var value_y = Blockly.Z80.valueToCode(block, 'Y', Blockly.Z80.ORDER_ATOMIC) || 'ld hl, 0\n';
-	// TODO: Assemble JavaScript into code variable.
+	
 	var code = [
 		value_x.trim(),
 		'push hl', // Save X coordinate for later
@@ -23,6 +23,20 @@ Blockly.Z80['hardware_sprite_move'] = function(block) {
 		'pop bc', // BC contains the Y coordinate
 		'pop de', // DE contains the X cordinate
 		'call MoveSpriteXY'
+	];
+	return code.join('\n') + '\n';
+};
+
+Blockly.Z80['hardware_sprite_tile'] = function(block) {
+	var sprite_number = Blockly.Z80.valueToCode(block, 'NUMBER', Blockly.Z80.ORDER_ATOMIC) || 'ld hl, 0\n';
+	var tile_number = Blockly.Z80.valueToCode(block, 'TILE_NUMBER', Blockly.Z80.ORDER_ATOMIC) || 'ld hl, 0\n';
+	
+	var code = [
+		tile_number.trim(),
+		'push hl', // Save tile number for later
+		sprite_number.trim(),
+		'pop de', // DE contains the tile number
+		'call SetSpriteTile'
 	];
 	return code.join('\n') + '\n';
 };
@@ -42,7 +56,7 @@ Blockly.Z80['hardware_read_joypad'] = function(block) {
   var which_joypad = block.getFieldValue('JOYPAD');
 
   var code = [
-	'ld c,Joypad_' + which_button,
+	'ld c, Joypad_' + which_button,
 	'call ' + (which_joypad == 'JOYPAD2' ? 'ReadJoypad2' : 'ReadJoypad1')
   ];
   

@@ -248,6 +248,7 @@ number_print_output_loop:
 number_print_output_loop_done:
 	ret
 
+	
 ;==============================================================
 ; Move an sprite to a certain (x,y) position
 ; Done only in RAM; needs UpdateSprites to actually update.
@@ -270,6 +271,22 @@ MoveSpriteXY:
 	add hl, de
 	ld (hl), c
 	
+	ret
+	
+
+
+;==============================================================
+; Sets the tile number for a certain sprite
+; Done only in RAM; needs UpdateSprites to actually update.
+; HL = Sprite number
+; E  = Tile number
+;==============================================================	
+SetSpriteTile:
+	add hl, hl	; Each record is two bytes long
+	ld a, e
+	ld de, hw_sprites_xc + 1
+	add hl, de
+	ld (hl), a	
 	ret
 	
 
