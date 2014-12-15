@@ -31,3 +31,20 @@ Blockly.Z80['hardware_wait_vblank'] = function(block) {
 	var code = 'call WaitForVBlank\n';
 	return code;
 };
+
+Blockly.Z80['hardware_read_joypads'] = function(block) {
+  var code = 'call ReadJoypads\n';
+  return code;
+};
+
+Blockly.Z80['hardware_read_joypad'] = function(block) {
+  var which_button = block.getFieldValue('BUTTON');
+  var which_joypad = block.getFieldValue('JOYPAD');
+
+  var code = [
+	'ld c,Joypad_' + which_button,
+	'call ' + (which_joypad == 'JOYPAD2' ? 'ReadJoypad2' : 'ReadJoypad1')
+  ];
+  
+  return [code.join('\n') + '\n', Blockly.Z80.ORDER_ATOMIC];
+};

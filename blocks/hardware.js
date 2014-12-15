@@ -49,3 +49,30 @@ Blockly.Blocks['hardware_wait_vblank'] = {
     this.setTooltip('Waits for VBlank; this should be called once per frame');
   }
 };
+
+// https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#mbenfx
+Blockly.Blocks['hardware_read_joypads'] = {
+  init: function() {
+    this.setHelpUrl('http://www.example.com/');
+    this.setColour(65);
+    this.appendDummyInput()
+        .appendField("Read joypads");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Reads the joypads; this should be called once per frame');
+  }
+};
+
+// https://blockly-demo.appspot.com/static/demos/blockfactory/index.html#yksd9i
+Blockly.Blocks['hardware_read_joypad'] = {
+  init: function() {
+    this.setHelpUrl('http://www.example.com/');
+    this.setColour(65);
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([["Up", "UP"], ["Down", "DOWN"], ["Left", "LEFT"], ["Right", "RIGHT"], ["Fire A", "FIREA"], ["Fire B", "FIREB"]]), "BUTTON")
+        .appendField("is pressed on")
+        .appendField(new Blockly.FieldDropdown([["Joypad 1", "JOYPAD1"], ["Joypad 2", "JOYPAD2"]]), "JOYPAD");
+    this.setOutput(true, "Boolean");
+    this.setTooltip('Returns the current state of the joypad; supposes that "Read joypads has been called"');
+  }
+};

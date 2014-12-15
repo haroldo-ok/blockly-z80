@@ -88,32 +88,44 @@
 		  <block type="hardware_update_sprites"></block>
 		  <block type="hardware_sprite_move"></block>
 		  <block type="hardware_wait_vblank"></block>
+		  <block type="hardware_read_joypads"></block>
+		  <block type="hardware_read_joypad"></block>
 	  </category>
 
       <category name="Example">
-		  <!-- Prints OK -->		
-		  <block type="text_print">
-			<value name="TEXT">
-				<block type="text">
-				  <field name="TEXT">OK</field>
-				</block>
-			</value>
-		  </block>
+		  <category name="Simple">
+			  <!-- Prints OK -->		
+			  <block type="text_print">
+				<value name="TEXT">
+					<block type="text">
+					  <field name="TEXT">OK</field>
+					</block>
+				</value>
+			  </block>
+			  
+			  <!-- Prints 123 -->		
+			  <block type="text_print">
+				<value name="TEXT">
+					<block type="math_number">
+					  <field name="NUM">123</field>
+					</block>
+				</value>
+			  </block>	
+		  </category>
 		  
-		  <!-- Prints 123 -->		
-		  <block type="text_print">
-			<value name="TEXT">
-				<block type="math_number">
-				  <field name="NUM">123</field>
-				</block>
-			</value>
-		  </block>	
+		  <category name="Counts to 10">
+			  <block type="variables_set" id="18" inline="true" x="253" y="150"><field name="VAR">Value</field><value name="VALUE"><block type="math_number" id="19"><field name="NUM">1</field></block></value><next><block type="controls_repeat" id="20"><field name="TIMES">10</field><statement name="DO"><block type="text_print" id="21" inline="false"><value name="TEXT"><block type="variables_get" id="22"><field name="VAR">Value</field></block></value><next><block type="text_print" id="23" inline="false"><value name="TEXT"><block type="text" id="24"><field name="TEXT"> </field></block></value><next><block type="variables_set" id="25" inline="true"><field name="VAR">Value</field><value name="VALUE"><block type="math_arithmetic" id="26" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="27"><field name="VAR">Value</field></block></value><value name="B"><block type="math_number" id="28"><field name="NUM">1</field></block></value></block></value></block></next></block></next></block></statement></block></next></block>
+		  </category>
+		  
+		  <category name="Moves a sprite diagonally">
+			  <block type="variables_set" id="30" inline="true" x="148" y="68"><field name="VAR">Position</field><value name="VALUE"><block type="math_number" id="47"><field name="NUM">0</field></block></value><next><block type="controls_whileUntil" id="31" inline="false"><field name="MODE">WHILE</field><value name="BOOL"><block type="logic_boolean" id="32"><field name="BOOL">TRUE</field></block></value><statement name="DO"><block type="hardware_sprite_move" id="53" inline="true"><value name="NUMBER"><block type="math_number" id="54"><field name="NUM">0</field></block></value><value name="X"><block type="variables_get" id="55"><field name="VAR">Position</field></block></value><value name="Y"><block type="variables_get" id="56"><field name="VAR">Position</field></block></value><next><block type="hardware_sprite_move" id="33" inline="true"><value name="NUMBER"><block type="math_number" id="52"><field name="NUM">1</field></block></value><value name="X"><block type="math_arithmetic" id="172" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="34"><field name="VAR">Position</field></block></value><value name="B"><block type="math_number" id="175"><field name="NUM">8</field></block></value></block></value><value name="Y"><block type="variables_get" id="35"><field name="VAR">Position</field></block></value><next><block type="hardware_wait_vblank" id="44"><next><block type="hardware_update_sprites" id="36"><next><block type="variables_set" id="37" inline="true"><field name="VAR">Position</field><value name="VALUE"><block type="math_arithmetic" id="38" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="39"><field name="VAR">Position</field></block></value><value name="B"><block type="math_number" id="40"><field name="NUM">1</field></block></value></block></value></block></next></block></next></block></next></block></next></block></statement></block></next></block>	  
+		  </category>
+		  
+		  <category name="Moves a sprite with the joypad">
+			  <block type="variables_set" id="195" inline="true" x="39" y="18"><field name="VAR">X Coordinate</field><value name="VALUE"><block type="math_number" id="196"><field name="NUM">0</field></block></value><next><block type="variables_set" id="218" inline="true"><field name="VAR">Y Coordinate</field><value name="VALUE"><block type="math_number" id="219"><field name="NUM">0</field></block></value><next><block type="controls_whileUntil" id="197" inline="false"><field name="MODE">WHILE</field><value name="BOOL"><block type="logic_boolean" id="198"><field name="BOOL">TRUE</field></block></value><statement name="DO"><block type="hardware_sprite_move" id="199" inline="true"><value name="NUMBER"><block type="math_number" id="200"><field name="NUM">0</field></block></value><value name="X"><block type="variables_get" id="201"><field name="VAR">X Coordinate</field></block></value><value name="Y"><block type="variables_get" id="202"><field name="VAR">Y Coordinate</field></block></value><next><block type="hardware_sprite_move" id="203" inline="true"><value name="NUMBER"><block type="math_number" id="204"><field name="NUM">1</field></block></value><value name="X"><block type="math_arithmetic" id="205" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="206"><field name="VAR">X Coordinate</field></block></value><value name="B"><block type="math_number" id="207"><field name="NUM">8</field></block></value></block></value><value name="Y"><block type="variables_get" id="208"><field name="VAR">Y Coordinate</field></block></value><next><block type="hardware_wait_vblank" id="209"><next><block type="hardware_update_sprites" id="210"><next><block type="hardware_read_joypads" id="211"><next><block type="controls_if" id="212" inline="false"><value name="IF0"><block type="hardware_read_joypad" id="213"><field name="BUTTON">UP</field><field name="JOYPAD">JOYPAD1</field></block></value><statement name="DO0"><block type="variables_set" id="214" inline="true"><field name="VAR">Y Coordinate</field><value name="VALUE"><block type="math_arithmetic" id="215" inline="true"><field name="OP">MINUS</field><value name="A"><block type="variables_get" id="216"><field name="VAR">Y Coordinate</field></block></value><value name="B"><block type="math_number" id="217"><field name="NUM">1</field></block></value></block></value></block></statement><next><block type="controls_if" id="220" inline="false"><value name="IF0"><block type="hardware_read_joypad" id="221"><field name="BUTTON">DOWN</field><field name="JOYPAD">JOYPAD1</field></block></value><statement name="DO0"><block type="variables_set" id="222" inline="true"><field name="VAR">Y Coordinate</field><value name="VALUE"><block type="math_arithmetic" id="223" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="224"><field name="VAR">Y Coordinate</field></block></value><value name="B"><block type="math_number" id="225"><field name="NUM">1</field></block></value></block></value></block></statement><next><block type="controls_if" id="226" inline="false"><value name="IF0"><block type="hardware_read_joypad" id="227"><field name="BUTTON">LEFT</field><field name="JOYPAD">JOYPAD1</field></block></value><statement name="DO0"><block type="variables_set" id="228" inline="true"><field name="VAR">X Coordinate</field><value name="VALUE"><block type="math_arithmetic" id="229" inline="true"><field name="OP">MINUS</field><value name="A"><block type="variables_get" id="230"><field name="VAR">X Coordinate</field></block></value><value name="B"><block type="math_number" id="231"><field name="NUM">1</field></block></value></block></value></block></statement><next><block type="controls_if" id="232" inline="false"><value name="IF0"><block type="hardware_read_joypad" id="233"><field name="BUTTON">RIGHT</field><field name="JOYPAD">JOYPAD1</field></block></value><statement name="DO0"><block type="variables_set" id="234" inline="true"><field name="VAR">X Coordinate</field><value name="VALUE"><block type="math_arithmetic" id="235" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="236"><field name="VAR">X Coordinate</field></block></value><value name="B"><block type="math_number" id="237"><field name="NUM">1</field></block></value></block></value></block></statement></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></statement></block></next></block></next></block>
+		  </category>
+      </category>
 
-		  <!-- Counts to 10 -->			
-		  <block type="variables_set" id="18" inline="true" x="253" y="150"><field name="VAR">Value</field><value name="VALUE"><block type="math_number" id="19"><field name="NUM">1</field></block></value><next><block type="controls_repeat" id="20"><field name="TIMES">10</field><statement name="DO"><block type="text_print" id="21" inline="false"><value name="TEXT"><block type="variables_get" id="22"><field name="VAR">Value</field></block></value><next><block type="text_print" id="23" inline="false"><value name="TEXT"><block type="text" id="24"><field name="TEXT"> </field></block></value><next><block type="variables_set" id="25" inline="true"><field name="VAR">Value</field><value name="VALUE"><block type="math_arithmetic" id="26" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="27"><field name="VAR">Value</field></block></value><value name="B"><block type="math_number" id="28"><field name="NUM">1</field></block></value></block></value></block></next></block></next></block></statement></block></next></block>
-		  
-		  <!-- Moves an sprite around -->
-		  <block type="variables_set" id="30" inline="true" x="148" y="68"><field name="VAR">Position</field><value name="VALUE"><block type="math_number" id="47"><field name="NUM">0</field></block></value><next><block type="controls_whileUntil" id="31" inline="false"><field name="MODE">WHILE</field><value name="BOOL"><block type="logic_boolean" id="32"><field name="BOOL">TRUE</field></block></value><statement name="DO"><block type="hardware_sprite_move" id="53" inline="true"><value name="NUMBER"><block type="math_number" id="54"><field name="NUM">0</field></block></value><value name="X"><block type="variables_get" id="55"><field name="VAR">Position</field></block></value><value name="Y"><block type="variables_get" id="56"><field name="VAR">Position</field></block></value><next><block type="hardware_sprite_move" id="33" inline="true"><value name="NUMBER"><block type="math_number" id="52"><field name="NUM">1</field></block></value><value name="X"><block type="math_arithmetic" id="172" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="34"><field name="VAR">Position</field></block></value><value name="B"><block type="math_number" id="175"><field name="NUM">8</field></block></value></block></value><value name="Y"><block type="variables_get" id="35"><field name="VAR">Position</field></block></value><next><block type="hardware_wait_vblank" id="44"><next><block type="hardware_update_sprites" id="36"><next><block type="variables_set" id="37" inline="true"><field name="VAR">Position</field><value name="VALUE"><block type="math_arithmetic" id="38" inline="true"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="39"><field name="VAR">Position</field></block></value><value name="B"><block type="math_number" id="40"><field name="NUM">1</field></block></value></block></value></block></next></block></next></block></next></block></next></block></statement></block></next></block>	  </category>
     </xml>
   </body>
 </html>

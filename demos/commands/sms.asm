@@ -15,7 +15,21 @@ hw_sprites_y_len:	equ 64
 hw_sprites_xc:		equ hw_sprites_y + hw_sprites_y_len
 hw_sprites_xc_len:	equ 128
 
-UsrRAMStart:		equ hw_sprites_xc + hw_sprites_xc_len
+hw_joypad_1:		equ hw_sprites_xc + hw_sprites_xc_len
+hw_joypad_2:		equ hw_joypad_1 + 1
+
+UsrRAMStart:		equ hw_joypad_2 + 1
+
+;==============================================================
+; Joypad constants
+;==============================================================
+Joypad_UP: 		equ 01h
+Joypad_DOWN:	equ 02h
+Joypad_LEFT:	equ 04h
+Joypad_RIGHT:	equ 08h
+Joypad_FIREA:	equ 10h
+Joypad_FIREB:	equ 20h
+
 
 	org 0000h
 	
@@ -315,3 +329,55 @@ WaitForVBlank_loop:
     pop af
     pop bc
     ret
+
+;==============================================================
+; Reads both joypads
+;==============================================================
+ReadJoypads:
+    ; Joypad reading
+    in a, ($DD)
+    ld h, a
+    in a, ($DC)
+    ld l, a
+
+    ; Joypad 1
+    cpl
+    and $7F
+    ld (hw_joypad_1), a
+    
+    ; Joypad 2
+    add hl, hl
+    add hl, hl		; Shifts top two bits from l (U/D Joypad 2) to h.
+    ld a, h
+    cpl
+    and $7F
+    ld (hw_joypad_2), a
+
+	ret
+
+	
+;==============================================================
+; Reads joypad 2 (assumes ReadJoypads has been called)
+; ANDs hw_joypad_1 and C; 
+; If the result is nonzero, HL = 1, else HL = 0
+;==============================================================
+ReadJoypad1:
+	ld a, (hw_joypad_1)
+Joypad_check:	; Shared by 
+	and c
+	jr z, Joypad_false
+	ld hl, 1
+	ret
+Joypad_false:
+	ld hl, 0
+	ret
+
+	
+;==============================================================
+; Reads joypad 2 (assumes ReadJoypads has been called)
+; ANDs hw_joypad_2 and C; 
+; If the result is nonzero, HL = 1, else HL = 0
+;==============================================================
+ReadJoypad2:
+	ld a, (hw_joypad_2)
+	jr Joypad_check
