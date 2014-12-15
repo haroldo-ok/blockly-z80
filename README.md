@@ -1,7 +1,11 @@
 blockly-z80
 ===========
 
-Blockly adapted to generate Z80 code.
+Blockly adapted to generate Z80 code. 
+
+You can see an online demo at 
+
+http://www.haroldo-ok.com/blockly-z80/blockly-z80/index.html
 
 Work in progress; commands implemented so far:
 - Numeric constants;
