@@ -6,6 +6,22 @@ html, body {
 	height: 100%;
 }
 
+body.loading {
+	background: url('loading.gif') center no-repeat;
+}
+
+body > div {
+	-webkit-transition: opacity 1s ease;
+	-moz-transition: opacity 1s ease;
+	-ms-transition: opacity 1s ease;
+	-o-transition: opacity 1s ease;
+	transition: opacity 1s ease;	
+}
+
+body.loading > div {
+	opacity: 0.3;
+}
+
 #blockly-editor {
 	width: 100%;
 	height: 100%;

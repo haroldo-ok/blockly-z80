@@ -124,6 +124,9 @@ function checkLoaded() {
 			var ext = $('#hardware-type').val();
 			saveAs(blob, 'bitz80.' + ext);
 		});
+		
+		// Page finished loading
+		$('body').removeClass('loading');
 	} else {
 		// Still waiting for dependencies to load
 	}			
