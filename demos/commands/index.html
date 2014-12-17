@@ -4,56 +4,10 @@
 <meta charset="UTF-8">
 <title>Blockly-Z80 demo</title>
 
+<link rel="stylesheet" type="text/css" href="blockly-z80.css" />
+
 <script type="text/javascript" src="../../FileSaver.js/FileSaver.js"></script>
 <script type="text/javascript" src="../../js/jquery-2.1.1.min.js"></script>
-
-<style>
-	html, body {
-		background-color: #fff;
-		margin: 0;
-		padding: 0;
-		overflow: hidden;
-		height: 100%;
-	}
-	
-	#blockly-editor {
-		width: 100%;
-		height: 100%;
-	}
-
-	#blockly-output {
-		width: 100%;
-		height: 70%;
-	}
-	
-	#bitz80-output {
-		width: 100%;
-		height: 30%;
-	}
-	
-	#blockly-editor {
-		border: 1px solid #ddd;
-	}
-	
-	#frame-container, #output-container {
-		height: 100%;
-	}
-	
-	#frame-container {
-		width: 70%;
-	}
-	
-	#output-container {
-		position: absolute;
-		top: 0;
-		left: 70%;
-		right: 0;
-	}
-	
-	#bitz80-container {
-		display: none;
-	}
-</style>
 
 </head>
 
@@ -200,7 +154,7 @@
 				<option value="sms" selected="selected">Sega Master System</option>
 				<option value="sg">SG-1000</option>
 			</select>
-			<button id="save-rom">Save ROM</button>
+			<button id="save-rom">Export ROM</button>
 		</div>
 		<textarea id="blockly-output"></textarea>
 		<textarea id="bitz80-output"></textarea>

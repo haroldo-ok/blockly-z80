@@ -1,0 +1,51 @@
+html, body {
+	background-color: #fff;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	height: 100%;
+}
+
+#blockly-editor {
+	width: 100%;
+	height: 100%;
+}
+
+#blockly-output {
+	width: 100%;
+	height: 70%;
+}
+
+#bitz80-output {
+	width: 100%;
+	height: 30%;	
+}
+
+#blockly-editor {
+	border: 1px solid #ddd;
+}
+
+#frame-container, #output-container {
+	height: 100%;
+}
+
+#output-container > textarea {
+	-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+	-moz-box-sizing: border-box;    /* Firefox, other Gecko */
+	box-sizing: border-box;	
+}
+
+#frame-container {
+	width: 70%;
+}
+
+#output-container {
+	position: absolute;
+	top: 0;
+	left: 70%;
+	right: 0;
+}
+
+#bitz80-container {
+	display: none;
+}
