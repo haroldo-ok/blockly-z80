@@ -10,15 +10,15 @@ RAMStart: 	equ $c000
 ;==============================================================
 ; RAM defines
 ;==============================================================
-hw_sprites_y:		equ RAMStart + 0
+hw_sprites_y:		equ RAMStart
 hw_sprites_y_len:	equ 64
-hw_sprites_xc:		equ hw_sprites_y + hw_sprites_y_len
+hw_sprites_xc:		equ hw_sprites_y+hw_sprites_y_len
 hw_sprites_xc_len:	equ 128
 
-hw_joypad_1:		equ hw_sprites_xc + hw_sprites_xc_len
-hw_joypad_2:		equ hw_joypad_1 + 1
+hw_joypad_1:		equ hw_sprites_xc+hw_sprites_xc_len
+hw_joypad_2:		equ hw_joypad_1+1
 
-UsrRAMStart:		equ hw_joypad_2 + 1
+UsrRAMStart:		equ hw_joypad_2+1
 
 ;==============================================================
 ; Joypad constants
@@ -133,7 +133,7 @@ ClearVRAM_Loop:
 	; Right side
 	ld a, 96
 	ld (hw_sprites_y+1), a
-	ld a, 96 + 8
+	ld a, 96+8
 	ld (hw_sprites_xc+2), a
 	ld a, 2
 	ld (hw_sprites_xc+3), a
@@ -284,7 +284,7 @@ MoveSpriteXY:
 SetSpriteTile:
 	add hl, hl	; Each record is two bytes long
 	ld a, e
-	ld de, hw_sprites_xc + 1
+	ld de, hw_sprites_xc+1
 	add hl, de
 	ld (hl), a	
 	ret

@@ -135,13 +135,10 @@ Blockly.Z80.finish = function(code) {
   }
   
   var generatedSource =
-		'\tinclude "hardware.asm"\n\n' +
 		definitions.join('\n\n') + 
 		'\n\nMAIN:\n' + code + 
 		'\n\nprogram_done:\tjr program_done' +
-		'\n\n\n' + stringDefs.join('\n') +
-		'\n\n' +
-		'\tinclude "data.asm"\n';
+		'\n\n\n' + stringDefs.join('\n');
 		
   var optimizedSource = Blockly.Z80.optimizeSource_(generatedSource);
   var formattedSource = Blockly.Z80.formatSource_(optimizedSource);

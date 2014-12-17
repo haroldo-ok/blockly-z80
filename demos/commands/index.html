@@ -6,6 +6,8 @@
 
 <script type="text/javascript" src="../../FileSaver.js/FileSaver.js"></script>
 <script type="text/javascript" src="../../js/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="../../js/underscore-min.js"></script>
+<script type="text/javascript" src="../../js/js80-browserified.min.js"></script>
 
 <style>
 	html, body {
@@ -87,96 +89,90 @@
 			console.debug('Blockly ready');			
             window.Blockly = blockly;
 			checkLoaded();
-		}
-		
-		function bitz80Loaded(BitZ80) {
-			console.debug('BitZ80 ready');			
-			window.BitZ80 = BitZ80;
-			
-			BitZ80.ASM.fExternalLoader = function(fileName) {
-				if (fileName == 'hardware.asm') {
-					var mapping = {
-						'sms': 'sms.asm',
-						'sg': 'sg-1000.asm'
-					};
-					fileName = mapping[$('#hardware-type').val()];
-					return assemblyIncludes[fileName] + '\n\n' + assemblyIncludes['common.asm'];
-				}				
-				return assemblyIncludes[fileName];
-			}
-			
-			// Patches the include directive to actually add the included things
-			BitZ80.ASM.prototype.originalMatchDirective = BitZ80.ASM.prototype.matchDirective;
-			BitZ80.ASM.prototype.matchDirective = function(sOp, sParams) {
-				if (!this.sStruct && sOp == 'INCLUDE') {
-					var sFile = eval(this.prepareParam(sParams));
-					var sCode = BitZ80.ASM.fExternalLoader(sFile);
-					var oASM = new BitZ80.ASM();
-					oASM.aMem = this.aMem;
-					oASM.aData = this.aData;
-					oASM.aLabels = this.aLabels;
-					oASM.iPointer = this.iPointer;
-					oASM.iBegin = this.iBegin;
-					oASM.iExec = this.iExec;
-					oASM.aTime = this.aTime;
-					oASM.iM1 = this.iM1;
-					oASM.sLastLabel = this.sLastLabel;
-					oASM.sGenType = this.sGenType;
-					
-					//this.fBreakpoint = null;
-					//this.aBreakpoints = null;
-					//this.sGenType = 'bin';
-					oASM.oParentASM = this;
-					oASM.start(sCode);
-					
-					this.iPointer = oASM.iPointer;
-					this.iBegin = oASM.iBegin;
-					this.iM1 = oASM.iM1;
-					this.sLastLabel = oASM.sLastLabel;
-					this.aMem = this.aMem.concat(oASM.aMem);
-					
-					return true;
-				} else {
-					return this.originalMatchDirective(sOp, sParams);
-				}
-			}
-			
-			checkLoaded();
-		}
+		}		
+
+		JS80.fileExists = function(fileName) {
+			return true;
+		};
+		JS80.readFile = function(fileName) {
+			if (fileName == 'main.asm') {
+				return JS80.source;
+			} else if (fileName == 'hardware.asm') {
+				var mapping = {
+					'sms': 'sms.asm',
+					'sg': 'sg-1000.asm'
+				};
+				fileName = mapping[$('#hardware-type').val()];
+				return assemblyIncludes[fileName] + '\n\n' + assemblyIncludes['common.asm'];
+			}				
+			return assemblyIncludes[fileName];
+		};
 		
 		function checkLoaded() {
-			if (window['Blockly'] && window['BitZ80'] && window['assemblyIncludes']) {
+			if (window['Blockly'] && window['assemblyIncludes']) {
 				console.debug('Everything is ready');
 				
-				BitZ80.compile = function(){
-					var code = Blockly.Z80.workspaceToCode();
+				JS80.compile = function(){
+					var code = [
+						'include "sms.asm"',
+						'include "common.asm"',
+						Blockly.Z80.workspaceToCode(),
+						'include "data.asm"'
+					].join('\n');
 					document.getElementById('blockly-output').value = code;
 					
 					var bzOut = document.getElementById('bitz80-output');
 					bzOut.value = '';
 					
-					var asm = new BitZ80.ASM();
-					BitZ80.code = null;
+					var asm = new JS80();
+					asm.searchPath = ['.']
+					JS80.source = null;
+					JS80.code = null;
 					
 					try {
-						asm.start(code);
-						asm.evaluateData();
-						asm.patch();
+						JS80.source = code;
+						asm.compileFile('main.asm');
+						asm.secondPass();
 					
-						BitZ80.code = asm.aMem;
-						BitZ80.labels = asm.aLabels;
+						JS80.code = asm.buildImage();
 						
 						bzOut.value = 'OK';
 					} catch (e) {
-						bzOut.value = e;
+						if (asm.errors.hasErrors()) {
+							bzOut.value = _.chain(asm.errors.errors)
+								.sortBy('fileName')
+								.sortBy('msg')
+								.sortBy('macro')
+								.sortBy('lineIndex')
+								.map(function(err){ 
+									if (err.macro) {
+										return [
+											err.fileName, ':',
+											err.lineIndex, ': ',
+											err.msg,
+											' while executing macro ',
+											err.macro
+										].join('');
+									} else {
+										return [
+											err.fileName, ':',
+											err.lineIndex, ': ',
+											err.msg
+										].join('');
+									}
+								})
+								.value().join('\n');
+						} else {
+							bzOut.value = e;
+						}	
 					}
 				}
 
 				// Capture Blockly's change event.
-				Blockly.addChangeListener(BitZ80.compile);
+				Blockly.addChangeListener(JS80.compile);
 				
 				// Capture 'Target Hardware' select
-				$('#hardware-type').change(BitZ80.compile);
+				$('#hardware-type').change(JS80.compile);
 				
 				// Capture 'Save ROM' button click
 				document.getElementById('save-rom').addEventListener('click', function(){
@@ -205,8 +201,6 @@
 		<textarea id="blockly-output"></textarea>
 		<textarea id="bitz80-output"></textarea>
 	</div>
-	
-	<iframe id="bitz80-container" src="bitz80-frame.html"></iframe>
 		
 </body>
 
