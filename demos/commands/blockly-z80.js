@@ -89,8 +89,10 @@ function checkLoaded() {
 		
 		BitZ80.compile = function(){
 			var code = Blockly.Z80.workspaceToCode();
-			$('#blockly-output > pre > code').html(code);
-			hljs.highlightBlock($('#blockly-output > pre > code')[0])
+			
+			var pre = $('#blockly-output').html('<pre>').find('> pre').addClass('language-z80asm');
+			pre.html('; test\n' + code);
+			Prism.highlightElement(pre[0])
 			
 			var bzOut = document.getElementById('bitz80-output');
 			bzOut.value = '';
