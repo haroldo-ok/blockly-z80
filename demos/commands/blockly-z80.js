@@ -91,7 +91,7 @@ function checkLoaded() {
 			var code = Blockly.Z80.workspaceToCode();
 			
 			var pre = $('#blockly-output').html('<pre>').find('> pre').addClass('language-z80asm');
-			pre.html('; test\n' + code);
+			pre.html(code);
 			Prism.highlightElement(pre[0])
 			
 			var bzOut = document.getElementById('bitz80-output');
