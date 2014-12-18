@@ -131,3 +131,6 @@ pre[class*="language-"] {
 	cursor: help;
 }
 
+.token.attr-value {
+	color: #0aa;
+}
