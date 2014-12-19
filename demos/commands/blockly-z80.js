@@ -135,7 +135,56 @@ function checkLoaded() {
 	}			
 }
 
+
 $(function(){
 	$("#blockly-editor").attr("src", "blockly-frame.html");
 	$("#bitz80-container").attr("src", "bitz80-frame.html");
+
+	var BLOCKLY_DESIGN_XML_FILENAME = "blockly-design.xml";
+	zip.useWebWorkers = false;
+	$("#save-design").click(function(){
+		var dom = Blockly.Xml.workspaceToDom(Blockly.mainWorkspace);
+		var xmlContent = Blockly.Xml.domToPrettyText(dom);
+		
+		zip.createWriter(new zip.BlobWriter(), function(writer) {
+			writer.add(BLOCKLY_DESIGN_XML_FILENAME, new zip.TextReader(xmlContent), function() {
+				writer.close(function(blob) {
+					saveAs(blob, 'blockly-design.zip');
+				});
+			}, function(currentIndex, totalIndex) {
+				// onprogress callback
+			});
+		}, function(error) {
+			console.error(error);
+		});
+	});
+	
+	var designSelector = $("#design-file-input");
+	$("#load-design").click(function(){ designSelector.click(); });
+	designSelector.change(function(){
+		console.log(this.files);
+		
+		zip.createReader(new zip.BlobReader(this.files[0]), function(reader) {
+		
+			reader.getEntries(function(entries) {
+				var entry = _.find(entries, function(en){ return en.filename == BLOCKLY_DESIGN_XML_FILENAME });
+				if (!entry) {
+					throw new Error('File not found on zip: ' + BLOCKLY_DESIGN_XML_FILENAME);
+				}
+				
+				entry.getData(new zip.TextWriter(), function(text) {
+					console.info("Loading:\n" + text);
+					var dom = Blockly.Xml.textToDom(text);
+					
+					Blockly.mainWorkspace.clear();
+					Blockly.Xml.domToWorkspace(Blockly.mainWorkspace, dom);
+				}, function(current, total) {
+					// onprogress callback
+				});
+			});
+		}, function(error) {
+			console.error(error);
+			doneLoading();
+		});
+	});
 });

@@ -14,11 +14,18 @@
 	</div>
 	<div id="output-container">
 		<div id="button-container">
-			<select id="hardware-type">
-				<option value="sms" selected="selected">Sega Master System</option>
-				<option value="sg">SG-1000</option>
-			</select>
-			<button id="save-rom">Export ROM</button>
+			<p>
+				<select id="hardware-type">
+					<option value="sms" selected="selected">Sega Master System</option>
+					<option value="sg">SG-1000</option>
+				</select>
+				<button id="save-rom">Export ROM</button>
+			</p>
+			<p>
+				<button id="save-design">Save design</button>
+				<button id="load-design">Load design</button>
+				<input id="design-file-input" type="file" accept="application/zip" style="display: none" />
+			</p>
 		</div>
 		<div id="blockly-output"></div>
 		<textarea id="bitz80-output"></textarea>
@@ -28,8 +35,15 @@
 		
 	<script type="text/javascript" src="../../FileSaver.js/FileSaver.js"></script>
 	<script type="text/javascript" src="../../js/jquery-2.1.1.min.js"></script>	
+	<script type="text/javascript" src="../../js/underscore-min.js"></script>	
+	
 	<script type="text/javascript" src="../../js/prism.nolang.js"></script>	
 	<script type="text/javascript" src="../../js/prism.z80asm.js"></script>	
+	
+	<script type="text/javascript" src="../../js/zip/zip.js"></script>	
+	<script type="text/javascript" src="../../js/zip/inflate.js"></script>	
+	<script type="text/javascript" src="../../js/zip/deflate.js"></script>	
+	
 	<script type="text/javascript" src="blockly-z80.js"></script>
 </body>
 
